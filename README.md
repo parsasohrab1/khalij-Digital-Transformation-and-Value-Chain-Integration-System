@@ -258,3 +258,189 @@ timestamp	orders_received	order_value_usd	product_type	order_quantity_tons	inven
 طراحی یک داشبورد هوش تجاری (BI) با PowerBI یا Tableau برای نمایش لحظه‌ای شاخص‌های کلیدی.
 
 پیاده‌سازی یک سیستم توصیه‌گر برای تخصیص بهینه سفارشات به انبارها بر اساس کمترین هزینه حمل و نزدیکترین موجودی
+
+
+
+📄 مستند SRS – محصول ۳: تحول دیجیتال و یکپارچه‌سازی زنجیره ارزش (با قابلیت ثبت اختراع)
+۱. مقدمه
+هدف: پیاده‌سازی یک پلتفرم یکپارچه مبتنی بر معماری Data Mesh که زنجیره تأمین، تولید، توزیع و فروش محصولات پتروشیمی را به‌صورت لحظه‌ای به هم متصل کرده و با استفاده از هوش مصنوعی، تصمیم‌گیری‌های استراتژیک و عملیاتی را بهینه‌سازی کند .
+
+نوآوری ثبت اختراع: برخلاف اختراع Honeywell که بر پلتفرم متمرکز وب‌بیس تأکید دارد، این سیستم از معماری Data Mesh با مالکیت غیرمتمرکز داده استفاده می‌کند و حلقه‌های تأمین، تولید، توزیع و فروش را در یک مدل بهینه‌سازی یکپارچه ترکیب می‌کند .
+
+۲. نیازمندی‌های عملکردی (با تأکید بر قابلیت‌های اختراع)
+شناسه	نیاز	قابلیت ثبت اختراع
+FR-DATA-01	یکپارچه‌سازی داده‌های تولید، انبارداری، حمل‌ونقل و فروش با معماری Data Mesh (مالکیت غیرمتمرکز داده)	معماری Data Mesh صنعتی (نوآوری اصلی)
+FR-ML-01	پیش‌بینی هم‌زمان تقاضا، قیمت و تخصیص بهینه خوراک با رویکرد بیشینه‌سازی حاشیه سود کل هلدینگ	پیش‌بینی و بهینه‌سازی یکپارچه
+FR-ML-02	بهینه‌سازی تخصیص خوراک بین واحدهای تولیدی با الگوریتم‌های برنامه‌ریزی خطی و LP	بهینه‌سازی تخصیص منابع
+FR-LOG-01	ردیابی لحظه‌ای محموله‌ها با GPS و AIS و اتصال به سامانه‌های گمرکی و بنادر ایران	بومی‌سازی لجستیک ایران
+FR-BI-01	تولید خودکار گزارش‌های "هزینه تمام‌شده هر تن محصول" و "حاشیه سود هر واحد تولیدی"	گزارش‌دهی یکپارچه سودآوری
+🧪 کد تولید داده‌های سنتتیک (یکپارچه برای هر سه حوزه)
+کد زیر داده‌های ۱۰,۰۰۰ رکورد (۱ رکورد در ثانیه) را برای هر سه حوزه به‌صورت یکپارچه تولید می‌کند تا بتوان از آن برای آموزش مدل‌های هر سه محصول استفاده کرد.
+
+python
+import numpy as np
+import pandas as pd
+from datetime import datetime, timedelta
+import random
+
+# ==============================================
+# پارامترهای تولید داده
+# ==============================================
+NUM_RECORDS = 10000
+START_TIME = datetime(2026, 7, 22, 8, 0, 0)
+
+# ==============================================
+# تولید برچسب زمانی (1 رکورد در ثانیه)
+# ==============================================
+timestamps = [START_TIME + timedelta(seconds=i) for i in range(NUM_RECORDS)]
+t = np.linspace(0, 10 * np.pi, NUM_RECORDS)  # برای الگوهای سیکلی
+
+# ==============================================
+# 1. متغیرهای حوزه بهینه‌سازی تولید
+# ==============================================
+
+# دمای راکتور - محدوده 150 تا 350 درجه سانتی‌گراد
+reactor_temp = 250 + 30 * np.sin(t * 0.5) + 0.01 * np.arange(NUM_RECORDS) + np.random.normal(0, 2, NUM_RECORDS)
+reactor_temp = np.clip(reactor_temp, 150, 350)
+
+# فشار راکتور - محدوده 10 تا 40 بار
+reactor_pressure = 25 + 5 * np.sin(t * 0.3) + 0.005 * np.arange(NUM_RECORDS) + np.random.normal(0, 0.8, NUM_RECORDS)
+reactor_pressure = np.clip(reactor_pressure, 10, 40)
+
+# دبی خوراک ورودی - محدوده 100 تا 500 مترمکعب بر ساعت
+feed_flow = 300 + 80 * np.sin(t * 0.2 + 1.2) + np.random.normal(0, 5, NUM_RECORDS)
+feed_flow = np.clip(feed_flow, 100, 500)
+
+# کیفیت محصول (MFI - شاخص جریان مذاب) - محدوده 2 تا 10
+mfi_quality = 5 + 2 * np.sin(t * 0.3 + 0.5) + 0.002 * np.arange(NUM_RECORDS) + np.random.normal(0, 0.3, NUM_RECORDS)
+mfi_quality = np.clip(mfi_quality, 2, 10)
+
+# ==============================================
+# 2. متغیرهای حوزه مدیریت انرژی و کربن
+# ==============================================
+
+# مصرف برق (توان لحظه‌ای) - محدوده 5 تا 25 مگاوات
+electricity_power = 15 + 5 * np.sin(t * 0.2) + 0.005 * np.arange(NUM_RECORDS) + np.random.normal(0, 0.5, NUM_RECORDS)
+electricity_power = np.clip(electricity_power, 5, 25)
+
+# مصرف سوخت گاز طبیعی - محدوده 50 تا 150 هزار مترمکعب بر ساعت
+fuel_gas_flow = 100 + 30 * np.sin(t * 0.15 + 1.5) + np.random.normal(0, 3, NUM_RECORDS)
+fuel_gas_flow = np.clip(fuel_gas_flow, 50, 150)
+
+# مصرف بخار - محدوده 10 تا 50 تن بر ساعت
+steam_flow = 30 + 10 * np.sin(t * 0.25 + 0.8) + np.random.normal(0, 1.5, NUM_RECORDS)
+steam_flow = np.clip(steam_flow, 10, 50)
+
+# انتشار کربن Scope 1 - کیلوگرم CO2 به ازای هر تن محصول
+carbon_scope1 = 0.2 * fuel_gas_flow + 0.3 * steam_flow + np.random.normal(0, 2, NUM_RECORDS)
+carbon_scope1 = np.clip(carbon_scope1, 20, 80)
+
+# انتشار کربن Scope 2 (برق خریداری‌شده)
+carbon_scope2 = 0.15 * electricity_power + np.random.normal(0, 1, NUM_RECORDS)
+carbon_scope2 = np.clip(carbon_scope2, 5, 30)
+
+# انتشار کربن Scope 3 (زنجیره تأمین و توزیع) - شبیه‌سازی
+carbon_scope3 = 0.1 * feed_flow + 0.05 * np.random.randn(NUM_RECORDS) + 10
+carbon_scope3 = np.clip(carbon_scope3, 5, 25)
+
+# انتشار کربن کل
+carbon_total = carbon_scope1 + carbon_scope2 + carbon_scope3
+
+# ==============================================
+# 3. متغیرهای حوزه تحول دیجیتال و زنجیره ارزش
+# ==============================================
+
+# قیمت نفت خام - محدوده 60 تا 90 دلار بر بشکه
+oil_price = 75 + 5 * np.sin(t * 0.15) + 2 * np.random.randn(NUM_RECORDS)
+oil_price = np.clip(oil_price, 60, 90)
+
+# قیمت محصول (HDPE) - وابسته به قیمت نفت
+price_hdpe = 900 + 0.5 * (oil_price - 75) * 10 + 20 * np.sin(t * 0.2) + 5 * np.random.randn(NUM_RECORDS)
+price_hdpe = np.clip(price_hdpe, 750, 1100)
+
+# تعداد سفارشات دریافتی (توزیع پواسون)
+orders_received = np.random.poisson(lam=2, size=NUM_RECORDS)
+
+# موجودی انبار - محدوده 2000 تا 8000 تن
+inventory = 5000 + 1000 * np.sin(t * 0.2) + np.random.normal(0, 100, NUM_RECORDS)
+inventory = np.clip(inventory, 2000, 8000)
+
+# زمان تحویل (ETA) - محدوده 2 تا 15 روز
+eta_days = 7 + 3 * np.sin(t * 0.15) + 2 * np.random.randn(NUM_RECORDS)
+eta_days = np.clip(np.round(eta_days, 1), 2, 15)
+
+# ==============================================
+# 4. متغیرهای هدف (خروجی‌های اصلی)
+# ==============================================
+
+# راندمان تولید (Efficiency) - تابعی از دما و فشار
+production_efficiency = ((reactor_temp - 200) / 150 * 20 + (reactor_pressure - 20) / 20 * 10 + 60 
+                         + np.random.normal(0, 2, NUM_RECORDS))
+production_efficiency = np.clip(production_efficiency, 40, 98)
+
+# شدت انرژی (SEC) - محدوده 500 تا 800 کیلوگرم معادل نفت خام بر تن
+energy_intensity = (600 + 0.5 * fuel_gas_flow + 2 * steam_flow - 0.1 * feed_flow 
+                    + 0.3 * reactor_temp + np.random.normal(0, 10, NUM_RECORDS))
+energy_intensity = np.clip(energy_intensity, 500, 800)
+
+# حاشیه سود عملیاتی - درصد
+operating_margin = 20 + 3 * np.sin(t * 0.2 + 1.0) + 2 * np.random.randn(NUM_RECORDS)
+operating_margin = np.clip(operating_margin, 10, 35)
+
+# ==============================================
+# ساخت دیتافریم یکپارچه
+# ==============================================
+df = pd.DataFrame({
+    'timestamp': timestamps,
+    
+    # حوزه ۱: بهینه‌سازی تولید
+    'reactor_temp_c': np.round(reactor_temp, 2),
+    'reactor_pressure_bar': np.round(reactor_pressure, 2),
+    'feed_flow_m3h': np.round(feed_flow, 2),
+    'mfi_quality': np.round(mfi_quality, 2),
+    'production_efficiency_percent': np.round(production_efficiency, 2),
+    
+    # حوزه ۲: مدیریت انرژی و کربن
+    'electricity_power_mw': np.round(electricity_power, 2),
+    'fuel_gas_flow_km3h': np.round(fuel_gas_flow, 2),
+    'steam_flow_tonh': np.round(steam_flow, 2),
+    'carbon_scope1_kgco2_ton': np.round(carbon_scope1, 2),
+    'carbon_scope2_kgco2_ton': np.round(carbon_scope2, 2),
+    'carbon_scope3_kgco2_ton': np.round(carbon_scope3, 2),
+    'carbon_total_kgco2_ton': np.round(carbon_total, 2),
+    'energy_intensity_kgoe_ton': np.round(energy_intensity, 2),
+    
+    # حوزه ۳: تحول دیجیتال و زنجیره ارزش
+    'oil_price_usd_bbl': np.round(oil_price, 2),
+    'price_hdpe_usd_ton': np.round(price_hdpe, 2),
+    'orders_received': orders_received,
+    'inventory_tons': np.round(inventory, 2),
+    'eta_days': eta_days,
+    'operating_margin_percent': np.round(operating_margin, 2)
+})
+
+# ==============================================
+# ذخیره فایل
+# ==============================================
+output_file = "integrated_petrochemical_data_10k.csv"
+df.to_csv(output_file, index=False)
+print(f"✅ داده‌های یکپارچه در فایل '{output_file}' ذخیره شد.")
+print(f"📊 تعداد رکوردها: {len(df):,} - تعداد متغیرها: {len(df.columns)}")
+
+print("\n🔍 نمونه داده‌های تولید شده:")
+print(df.head())
+
+print("\n📈 آمار توصیفی داده‌ها:")
+print(df.describe())
+🧩 جمع‌بندی: قابلیت‌های کلیدی ثبت اختراع
+حوزه	قابلیت‌های نوآورانه برای ثبت اختراع
+بهینه‌سازی تولید	1. حسگرهای مجازی هوشمند برای پیش‌بینی بلادرنگ خواص محصول 
+2. بهینه‌سازی سه‌هدفه (هزینه، کیفیت، انرژی) با PSO
+3. تولید داده‌های مصنوعی با GAN برای آموزش در شرایط کم‌داده
+مدیریت انرژی و کربن	1. محاسبه کامل Scope 1، 2 و 3 (برخلاف اختراعات موجود)
+2. شبیه‌سازی سناریوهای کربن‌محور (چه-اگر)
+3. بومی‌سازی برای قوانین و ضرایب انتشار ایران
+تحول دیجیتال	1. معماری Data Mesh صنعتی با مالکیت غیرمتمرکز داده
+2. پیش‌بینی و بهینه‌سازی یکپارچه کل زنجیره ارزش 
+3. اتصال به سامانه‌های گمرکی و بنادر ایران
+
