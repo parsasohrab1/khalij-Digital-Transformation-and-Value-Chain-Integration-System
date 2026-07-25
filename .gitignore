@@ -1,0 +1,53 @@
+## Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+.venv/
+venv/
+env/
+build/
+dist/
+
+## Environment / secrets
+.env
+.env.*
+!.env.example
+
+## Data
+data/*.csv
+!data/.gitkeep
+
+## MLflow
+mlruns/
+mlartifacts/
+
+## Docker / infra volumes
+infra/**/data/
+postgres-data/
+timescale-data/
+redis-data/
+kafka-data/
+
+## IDE
+.vscode/
+.idea/
+*.swp
+
+## Logs
+*.log
+logs/
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+## TLS certs (generated locally)
+infra/nginx/certs/*.pem
+!infra/nginx/certs/.gitkeep

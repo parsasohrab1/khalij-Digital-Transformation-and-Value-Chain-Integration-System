@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Khalij Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&family=Sora:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="brand-block">
+      <div class="brand-mark" aria-hidden="true"></div>
+      <div>
+        <p class="brand" data-i18n="brand">هلدینگ خلیج فارس</p>
+        <h1 class="title" data-i18n="command_center_title">مرکز فرماندهی زنجیره ارزش</h1>
+      </div>
+    </div>
+    <div class="top-controls">
+      <label>
+        <span data-i18n="role_executive">نقش</span>
+        <select id="role">
+          <option value="executive">executive</option>
+          <option value="analyst" selected>analyst</option>
+          <option value="logistics">logistics</option>
+          <option value="sales">sales</option>
+          <option value="admin">admin</option>
+        </select>
+      </label>
+      <label>
+        Lang
+        <select id="locale">
+          <option value="fa" selected>FA</option>
+          <option value="en">EN</option>
+          <option value="ar">AR</option>
+        </select>
+      </label>
+      <button id="refreshBtn" class="btn primary" type="button">↻</button>
+    </div>
+  </header>
+
+  <nav class="nav" id="nav">
+    <button type="button" data-view="dashboard" class="active" data-i18n="nav_dashboard">داشبورد</button>
+    <button type="button" data-view="cost" data-i18n="nav_cost">هزینه و حاشیه</button>
+    <button type="button" data-view="distribution" data-i18n="nav_distribution">عملکرد توزیع</button>
+    <button type="button" data-view="alerts" data-i18n="nav_alerts">هشدارها</button>
+    <button type="button" data-view="optimize" data-i18n="nav_optimize">بهینه‌سازی</button>
+  </nav>
+
+  <section class="filters">
+    <label>
+      <span data-i18n="filter_subsidiary">شرکت تابعه</span>
+      <select id="subsidiary"><option value="">—</option></select>
+    </label>
+    <label>
+      <span data-i18n="filter_product">محصول</span>
+      <select id="product"><option value="">—</option></select>
+    </label>
+    <label>
+      <span data-i18n="filter_region">منطقه</span>
+      <select id="region"><option value="">—</option></select>
+    </label>
+    <label>
+      <span data-i18n="filter_period">بازه زمانی</span>
+      <select id="period">
+        <option value="7d" data-i18n="period_7d">۷ روز</option>
+        <option value="30d" selected data-i18n="period_30d">۳۰ روز</option>
+        <option value="90d" data-i18n="period_90d">۹۰ روز</option>
+      </select>
+    </label>
+  </section>
+
+  <main>
+    <section id="view-dashboard" class="view active">
+      <div class="kpi-grid" id="kpiGrid"></div>
+      <div class="panel">
+        <h2 data-i18n="kpi_margin">روند حاشیه عملیاتی</h2>
+        <canvas id="trendChart" height="120"></canvas>
+      </div>
+    </section>
+
+    <section id="view-cost" class="view">
+      <div class="panel">
+        <h2 data-i18n="cost_per_ton">هزینه تمام‌شده هر تن</h2>
+        <div id="costTable" class="table-wrap"></div>
+      </div>
+    </section>
+
+    <section id="view-distribution" class="view">
+      <div class="panel">
+        <h2 data-i18n="nav_distribution">عملکرد توزیع</h2>
+        <div id="distTable" class="table-wrap"></div>
+      </div>
+    </section>
+
+    <section id="view-alerts" class="view">
+      <div class="panel alerts-head">
+        <h2 data-i18n="alerts_title">هشدارهای هوشمند</h2>
+        <button id="budgetCheckBtn" class="btn" type="button" data-i18n="run_budget_check">بررسی انحراف بودجه</button>
+      </div>
+      <div id="alertsList" class="alerts-list"></div>
+    </section>
+
+    <section id="view-optimize" class="view">
+      <div class="panel">
+        <h2 data-i18n="nav_optimize">بهینه‌سازی یکپارچه</h2>
+        <p class="muted">اجرای حلقه تقاضا + قیمت + تخصیص خوراک (فاز ۲) از طریق Gateway.</p>
+        <button id="optimizeBtn" class="btn primary" type="button">Run Integrated Optimize</button>
+        <pre id="optimizeOut" class="code-out"></pre>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span>Phase 4 Command Center</span>
+    <span id="generatedAt"></span>
+  </footer>
+
+  <script>
+    window.DVC_API_BASE = localStorage.getItem('dvc_api_base') || 'http://localhost:8000';
+    window.DVC_BI_BASE = localStorage.getItem('dvc_bi_base') || 'http://localhost:8005';
+  </script>
+  <script src="/assets/app.js"></script>
+</body>
+</html>

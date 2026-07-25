@@ -1,0 +1,111 @@
+# ==========================================================================
+# Khalij DVC - Production / HA overlay (Phase 5)
+# TLS 1.3 nginx + replicated gateway + optional analytics scale
+# Usage:
+#   python scripts/generate_tls_certs.py
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
+# Optional analytics stream profile:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml --profile stream up -d
+# ==========================================================================
+
+services:
+  # Behind nginx-tls: keep published port for direct debug; HA via upstream pool
+  api-gateway:
+    deploy:
+      replicas: 1
+    environment:
+      ENVIRONMENT: production
+      FORCE_HTTPS: "true"
+      TLS_MIN_VERSION: TLSv1.3
+      RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-300}
+      AUDIT_LOG_ENABLED: "true"
+      TARGET_AVAILABILITY: ${TARGET_AVAILABILITY:-99.95%}
+      TARGET_TPS: ${TARGET_TPS:-50000}
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  api-gateway-2:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    container_name: khalij-dvc-api-gateway-2
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      ENVIRONMENT: production
+      FORCE_HTTPS: "true"
+      TLS_MIN_VERSION: TLSv1.3
+      RATE_LIMIT_PER_MINUTE: ${RATE_LIMIT_PER_MINUTE:-300}
+      AUDIT_LOG_ENABLED: "true"
+      TARGET_AVAILABILITY: ${TARGET_AVAILABILITY:-99.95%}
+      TARGET_TPS: ${TARGET_TPS:-50000}
+    depends_on:
+      - data-integration
+      - supply-chain-analytics
+      - logistics
+      - order-to-cash
+      - bi-reporting
+    # Internal only — nginx upstream api-gateway-2:8000
+    expose:
+      - "8000"
+    networks: [khalij-dvc-net]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  supply-chain-analytics:
+    environment:
+      ENVIRONMENT: production
+    deploy:
+      replicas: 1
+
+  nginx-tls:
+    image: nginx:1.27-alpine
+    container_name: khalij-dvc-nginx-tls
+    restart: unless-stopped
+    depends_on:
+      - api-gateway
+      - api-gateway-2
+      - command-center
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./infra/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./infra/nginx/certs:/etc/nginx/certs:ro
+    networks: [khalij-dvc-net]
+
+  # Optional heavy stream/analytics (profile=stream)
+  flink-jobmanager:
+    image: flink:1.18-scala_2.12-java11
+    profiles: ["stream"]
+    command: jobmanager
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=flink-jobmanager
+    ports:
+      - "8081:8081"
+    networks: [khalij-dvc-net]
+
+  flink-taskmanager:
+    image: flink:1.18-scala_2.12-java11
+    profiles: ["stream"]
+    depends_on: [flink-jobmanager]
+    command: taskmanager
+    environment:
+      - JOB_MANAGER_RPC_ADDRESS=flink-jobmanager
+    networks: [khalij-dvc-net]
+
+  druid-broker:
+    image: apache/druid:28.0.1
+    profiles: ["stream"]
+    command: ["broker"]
+    environment:
+      DRUID_HOST: druid-broker
+    ports:
+      - "8082:8082"
+    networks: [khalij-dvc-net]

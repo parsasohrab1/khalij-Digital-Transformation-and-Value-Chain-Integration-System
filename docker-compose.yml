@@ -1,0 +1,224 @@
+# ==========================================================================
+# Khalij DVC - زیرساخت اصلی
+# PostgreSQL + TimescaleDB + Redis + Kafka + MLflow + میکروسرویس‌ها
+# معماری: Microservices + Data Mesh (نوآوری ثبت اختراع)
+# ==========================================================================
+
+networks:
+  khalij-dvc-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  timescale-data:
+  redis-data:
+  kafka-data:
+  mlflow-artifacts:
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: khalij-dvc-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [khalij-dvc-net]
+
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: khalij-dvc-timescale
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${TIMESCALE_USER:-khalij_admin}
+      POSTGRES_PASSWORD: ${TIMESCALE_PASSWORD:-change_me_strong_password}
+      POSTGRES_DB: ${TIMESCALE_DB:-khalij_dvc_ts}
+    ports:
+      - "${TIMESCALE_PORT:-5433}:5432"
+    volumes:
+      - timescale-data:/var/lib/postgresql/data
+      - ./infra/timescaledb/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [khalij-dvc-net]
+
+  redis:
+    image: redis:7-alpine
+    container_name: khalij-dvc-redis
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}"]
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [khalij-dvc-net]
+
+  kafka:
+    image: apache/kafka:3.7.0
+    container_name: khalij-dvc-kafka
+    restart: unless-stopped
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      - "29092:29092"
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    networks: [khalij-dvc-net]
+
+  mlflow:
+    build:
+      context: ./infra/mlflow
+    container_name: khalij-dvc-mlflow
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      MLFLOW_BACKEND_STORE_URI: ${MLFLOW_BACKEND_STORE_URI}
+      MLFLOW_ARTIFACT_ROOT: ${MLFLOW_ARTIFACT_ROOT}
+    ports:
+      - "5000:5000"
+    volumes:
+      - mlflow-artifacts:/mlartifacts
+    networks: [khalij-dvc-net]
+
+  data-integration:
+    build:
+      context: .
+      dockerfile: services/data-integration/Dockerfile
+    container_name: khalij-dvc-data-integration
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      kafka:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${DATA_INTEGRATION_PORT:-8001}:8001"
+    networks: [khalij-dvc-net]
+
+  supply-chain-analytics:
+    build:
+      context: .
+      dockerfile: services/supply-chain-analytics/Dockerfile
+    container_name: khalij-dvc-analytics
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      kafka:
+        condition: service_started
+      mlflow:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    ports:
+      - "${SUPPLY_CHAIN_ANALYTICS_PORT:-8002}:8002"
+    networks: [khalij-dvc-net]
+
+  logistics:
+    build:
+      context: .
+      dockerfile: services/logistics/Dockerfile
+    container_name: khalij-dvc-logistics
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "${LOGISTICS_PORT:-8003}:8003"
+    networks: [khalij-dvc-net]
+
+  order-to-cash:
+    build:
+      context: .
+      dockerfile: services/order-to-cash/Dockerfile
+    container_name: khalij-dvc-orders
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "${ORDER_TO_CASH_PORT:-8004}:8004"
+    networks: [khalij-dvc-net]
+
+  bi-reporting:
+    build:
+      context: .
+      dockerfile: services/bi-reporting/Dockerfile
+    container_name: khalij-dvc-bi
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "${BI_REPORTING_PORT:-8005}:8005"
+    networks: [khalij-dvc-net]
+
+  command-center:
+    build:
+      context: .
+      dockerfile: services/command-center/Dockerfile
+    container_name: khalij-dvc-command-center
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - bi-reporting
+      - api-gateway
+    ports:
+      - "${COMMAND_CENTER_PORT:-8010}:8010"
+    networks: [khalij-dvc-net]
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: services/api-gateway/Dockerfile
+    container_name: khalij-dvc-api-gateway
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - data-integration
+      - supply-chain-analytics
+      - logistics
+      - order-to-cash
+      - bi-reporting
+    ports:
+      - "${API_GATEWAY_PORT:-8000}:8000"
+    networks: [khalij-dvc-net]
