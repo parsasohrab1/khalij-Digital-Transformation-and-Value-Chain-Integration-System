@@ -10,6 +10,7 @@ import redis
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+from shared.db import dumps, pg_execute, pg_fetchall, pg_fetchone
 from shared.logging_config import configure_logging
 from shared.settings import get_settings
 
@@ -26,11 +27,12 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Khalij DVC - Logistics Phase 3",
     description="Live AIS/GPS + weather ETA + Iran customs + customer portal",
-    version="3.0.0",
+    version="3.1.0",
 )
 
 _redis: redis.Redis | None = None
 _SHIPMENTS: dict[str, dict] = {}
+_SHIPMENTS_HYDRATED = False
 DESTINATIONS = {
     "Jebel Ali": {"lat": 25.0657, "lon": 55.1713},
     "Fujairah": {"lat": 25.1288, "lon": 56.3265},
@@ -51,16 +53,95 @@ def get_redis() -> redis.Redis | None:
         return None
 
 
+def _save_shipment_db(shipment: dict) -> None:
+    pg_execute(
+        """
+        INSERT INTO shipments (
+            shipment_number, mode, origin_port, destination, customs_declaration,
+            ais_mmsi, gps_device_id, eta_days, status, order_number, product_grade,
+            quantity_tons, value_usd, payload_json, order_id, updated_at
+        ) VALUES (
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb,
+            (SELECT id FROM orders WHERE order_number = %s LIMIT 1), now()
+        )
+        ON CONFLICT (shipment_number) DO UPDATE SET
+            status = EXCLUDED.status,
+            eta_days = EXCLUDED.eta_days,
+            customs_declaration = EXCLUDED.customs_declaration,
+            order_number = EXCLUDED.order_number,
+            payload_json = EXCLUDED.payload_json,
+            updated_at = now()
+        """,
+        (
+            shipment["shipment_number"],
+            shipment.get("mode", "sea"),
+            shipment.get("origin_port"),
+            shipment.get("destination"),
+            shipment.get("customs_declaration"),
+            shipment.get("ais_mmsi"),
+            shipment.get("gps_device_id"),
+            shipment.get("eta_days"),
+            shipment.get("status", "planned"),
+            shipment.get("order_number"),
+            shipment.get("product_grade"),
+            shipment.get("quantity_tons"),
+            shipment.get("value_usd"),
+            dumps(shipment),
+            shipment.get("order_number"),
+        ),
+    )
+
+
 def _persist(shipment: dict) -> None:
+    _SHIPMENTS[shipment["shipment_number"]] = shipment
+    _save_shipment_db(shipment)
     r = get_redis()
     if r is None:
         return
     try:
-        r.set(f"dvc:shipment:{shipment['shipment_number']}", json.dumps(shipment))
+        r.set(f"dvc:shipment:{shipment['shipment_number']}", json.dumps(shipment, default=str))
         if shipment.get("order_number"):
             r.set(f"dvc:order_shipment:{shipment['order_number']}", shipment["shipment_number"])
     except Exception:  # noqa: BLE001
         pass
+
+
+def _load_shipment(shipment_number: str) -> dict | None:
+    if shipment_number in _SHIPMENTS:
+        return _SHIPMENTS[shipment_number]
+    r = get_redis()
+    if r:
+        try:
+            raw = r.get(f"dvc:shipment:{shipment_number}")
+            if raw:
+                s = json.loads(raw)
+                _SHIPMENTS[shipment_number] = s
+                return s
+        except Exception:  # noqa: BLE001
+            pass
+    row = pg_fetchone("SELECT payload_json FROM shipments WHERE shipment_number=%s", (shipment_number,))
+    if row and row.get("payload_json"):
+        payload = row["payload_json"]
+        if isinstance(payload, str):
+            payload = json.loads(payload)
+        _SHIPMENTS[shipment_number] = payload
+        return payload
+    return None
+
+
+def _hydrate_shipments() -> None:
+    global _SHIPMENTS_HYDRATED
+    if _SHIPMENTS_HYDRATED:
+        return
+    for row in pg_fetchall(
+        "SELECT shipment_number, payload_json FROM shipments WHERE payload_json IS NOT NULL ORDER BY id DESC LIMIT 500"
+    ):
+        payload = row.get("payload_json")
+        if isinstance(payload, str):
+            payload = json.loads(payload)
+        if payload and payload.get("shipment_number"):
+            _SHIPMENTS[payload["shipment_number"]] = payload
+    _SHIPMENTS_HYDRATED = True
 
 
 class CreateShipmentRequest(BaseModel):
@@ -187,7 +268,7 @@ async def create_shipment(body: CreateShipmentRequest) -> dict:
 
 @app.post("/shipments/live-track")
 async def live_track(body: LiveTrackRequest) -> dict:
-    shipment = _SHIPMENTS.get(body.shipment_number)
+    shipment = _load_shipment(body.shipment_number)
     if not shipment:
         raise HTTPException(status_code=404, detail="shipment not found")
 
@@ -231,7 +312,7 @@ async def live_track(body: LiveTrackRequest) -> dict:
 
 @app.post("/shipments/eta")
 async def calculate_eta(body: ETARequest) -> dict:
-    shipment = _SHIPMENTS.get(body.shipment_number)
+    shipment = _load_shipment(body.shipment_number)
     if not shipment:
         raise HTTPException(status_code=404, detail="shipment not found")
     eta = compute_eta(
@@ -255,16 +336,9 @@ async def calculate_eta(body: ETARequest) -> dict:
 
 @app.get("/shipments/{shipment_number}")
 async def get_shipment(shipment_number: str) -> dict:
-    if shipment_number in _SHIPMENTS:
-        return _SHIPMENTS[shipment_number]
-    r = get_redis()
-    if r:
-        try:
-            raw = r.get(f"dvc:shipment:{shipment_number}")
-            if raw:
-                return json.loads(raw)
-        except Exception:  # noqa: BLE001
-            pass
+    shipment = _load_shipment(shipment_number)
+    if shipment:
+        return shipment
     raise HTTPException(status_code=404, detail="shipment not found")
 
 
@@ -310,16 +384,31 @@ async def customs_get(declaration_number: str) -> dict:
 @app.get("/customer/orders/{order_number}/status")
 async def customer_order_status(order_number: str, locale: str = "fa") -> dict:
     """Customer portal — order + shipment + ETA + customs (FR-LOG-03)."""
+    _hydrate_shipments()
     matched = [s for s in _SHIPMENTS.values() if s.get("order_number") == order_number]
     if not matched:
         r = get_redis()
         if r:
             try:
                 sh_no = r.get(f"dvc:order_shipment:{order_number}")
-                if sh_no and sh_no in _SHIPMENTS:
-                    matched = [_SHIPMENTS[sh_no]]
+                if sh_no:
+                    s = _load_shipment(sh_no)
+                    if s:
+                        matched = [s]
             except Exception:  # noqa: BLE001
                 pass
+    if not matched:
+        rows = pg_fetchall(
+            "SELECT payload_json FROM shipments WHERE order_number=%s ORDER BY id DESC LIMIT 1",
+            (order_number,),
+        )
+        for row in rows:
+            payload = row.get("payload_json")
+            if isinstance(payload, str):
+                payload = json.loads(payload)
+            if payload:
+                matched = [payload]
+                _SHIPMENTS[payload["shipment_number"]] = payload
     if not matched:
         msg = {
             "fa": "سفارشی با این شماره یافت نشد یا هنوز ارسال نشده است",
@@ -364,4 +453,5 @@ async def customer_order_status(order_number: str, locale: str = "fa") -> dict:
 
 @app.get("/shipments")
 async def list_shipments(limit: int = 50) -> list[dict]:
+    _hydrate_shipments()
     return list(_SHIPMENTS.values())[-limit:]

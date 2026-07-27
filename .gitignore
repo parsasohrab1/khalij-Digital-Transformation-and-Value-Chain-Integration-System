@@ -39,6 +39,10 @@ kafka-data/
 *.log
 logs/
 
+## Generated reports (keep markdown proof docs)
+reports/*.json
+!reports/.gitkeep
+
 ## OS
 .DS_Store
 Thumbs.db

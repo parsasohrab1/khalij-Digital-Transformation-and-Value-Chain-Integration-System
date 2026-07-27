@@ -1,10 +1,10 @@
 [
   {
-    "run_id": "409654cb-8e61-4a7c-9888-e1b7821979c1",
+    "run_id": "a60680f6-e03c-440d-8b3e-3f173085b2be",
     "model_name": "prophet",
     "metrics": {
       "holding_margin_usd": 191663.09,
-      "latency_ms": 985.78,
+      "latency_ms": 535.51,
       "horizon_days": 30.0
     },
     "params": {
@@ -16,7 +16,7 @@
       "patent": "closed-loop-value-chain",
       "phase": "2"
     },
-    "created_at": "2026-07-27T14:43:00.745497+00:00",
+    "created_at": "2026-07-27T16:04:28.121990+00:00",
     "backend": "local"
   }
 ]

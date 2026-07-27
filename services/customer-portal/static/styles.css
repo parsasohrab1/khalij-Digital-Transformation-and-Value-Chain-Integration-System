@@ -1,0 +1,56 @@
+:root {
+  --bg: #07131a;
+  --card: rgba(14, 32, 40, 0.92);
+  --line: rgba(180, 210, 200, 0.18);
+  --text: #e8f3ee;
+  --muted: #9bb3aa;
+  --accent: #2f9e8b;
+  --gold: #d4a017;
+  --font: "Vazirmatn", "Sora", sans-serif;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font);
+  color: var(--text);
+  background: linear-gradient(180deg, #0a1820, var(--bg) 55%);
+}
+.bg {
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(900px 420px at 15% -10%, rgba(47,158,139,0.22), transparent 60%),
+    radial-gradient(700px 360px at 90% 0%, rgba(212,160,23,0.12), transparent 55%);
+  pointer-events: none;
+}
+.shell { position: relative; max-width: 980px; margin: 0 auto; padding: 2rem 1.25rem 3rem; }
+.brand { margin: 0; font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 700; color: #f4efe4; }
+h1 { margin: 0.35rem 0 0.4rem; font-size: 1.15rem; font-weight: 600; color: var(--muted); }
+.sub { margin: 0 0 1.5rem; color: var(--muted); }
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 1.1rem 1.2rem;
+  box-shadow: 0 18px 40px rgba(0,0,0,0.28);
+}
+#trackForm { display: grid; gap: 0.85rem; grid-template-columns: 1.5fr 0.7fr auto; align-items: end; }
+label { display: grid; gap: 0.3rem; font-size: 0.8rem; color: var(--muted); }
+input, select, button {
+  font: inherit; border-radius: 10px; border: 1px solid var(--line);
+  background: rgba(8,20,26,0.9); color: var(--text); padding: 0.65rem 0.8rem;
+}
+button {
+  background: linear-gradient(135deg, var(--accent), #1f7a6c);
+  border: none; color: #04120f; font-weight: 700; cursor: pointer;
+}
+.grid { display: grid; gap: 1rem; margin-top: 1.25rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+pre {
+  margin: 0; white-space: pre-wrap; word-break: break-word;
+  font-size: 0.85rem; color: #b9d2c8; line-height: 1.45;
+}
+.error { color: #ffb4a8; }
+.hidden { display: none !important; }
+@media (max-width: 720px) {
+  #trackForm { grid-template-columns: 1fr; }
+}

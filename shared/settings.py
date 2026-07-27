@@ -70,6 +70,7 @@ class Settings(BaseSettings):
     order_to_cash_port: int = Field(default=8004, alias="ORDER_TO_CASH_PORT")
     bi_reporting_port: int = Field(default=8005, alias="BI_REPORTING_PORT")
     command_center_port: int = Field(default=8010, alias="COMMAND_CENTER_PORT")
+    customer_portal_port: int = Field(default=8011, alias="CUSTOMER_PORTAL_PORT")
 
 
 @lru_cache

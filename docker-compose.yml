@@ -206,6 +206,19 @@ services:
       - "${COMMAND_CENTER_PORT:-8010}:8010"
     networks: [khalij-dvc-net]
 
+  customer-portal:
+    build:
+      context: .
+      dockerfile: services/customer-portal/Dockerfile
+    container_name: khalij-dvc-customer-portal
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - api-gateway
+    ports:
+      - "${CUSTOMER_PORTAL_PORT:-8011}:8011"
+    networks: [khalij-dvc-net]
+
   api-gateway:
     build:
       context: .

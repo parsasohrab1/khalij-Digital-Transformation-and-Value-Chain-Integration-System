@@ -96,6 +96,12 @@ async def health() -> dict:
     }
 
 
+@app.get("/bench/ping")
+async def bench_ping() -> dict:
+    """مسیر سبک برای اندازه‌گیری ظرفیت افقی (NFR-SCL-01)."""
+    return {"pong": True, "target_tps": settings.target_tps}
+
+
 @app.get("/health/ha")
 async def health_ha() -> dict:
     """وضعیت Failover / HA برای مسیر بحرانی."""

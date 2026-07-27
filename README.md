@@ -50,8 +50,21 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
 | Order-to-Cash | 8004 |
 | BI Reporting | 8005 |
 | Command Center UI | 8010 |
+| Customer Portal | 8011 |
 
----
+**Customer portal (no internal login)**  
+http://localhost:8011 — enter `ORD-…` to view order + shipment status via Gateway.
+
+**Persist / scale proofs**
+```bash
+# Existing Postgres volume: apply schema upgrades
+# psql $POSTGRES_DSN -f scripts/migrate_persist.sql
+
+python scripts/prove_tps.py --iterations 20000 --workers 32
+# optional network: python scripts/prove_tps.py --url http://127.0.0.1:8000/bench/ping
+```
+
+Reports: `docs/TPS_PROOF.md`, `reports/tps_proof.json`
 
 ۱. مقدمه (Introduction)
 هدف: پیاده‌سازی یک پلتفرم یکپارچه مبتنی بر داده که زنجیره تأمین، تولید، توزیع و فروش محصولات پتروشیمی را به‌صورت لحظه‌ای به هم متصل کرده و با استفاده از هوش مصنوعی، تصمیم‌گیری‌های استراتژیک و عملیاتی را بهینه‌سازی کند. این سیستم، دیدگاه "از میدان تا بازار" (Well-to-Market) را محقق می‌سازد.

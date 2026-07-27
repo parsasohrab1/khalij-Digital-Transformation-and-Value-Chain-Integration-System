@@ -1,10 +1,94 @@
-"""هشدارهای هوشمند انحراف تولید/فروش/بودجه با تأیید."""
+"""هشدارهای هوشمند — حافظه + Postgres alerts."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Any
 
+from shared.db import dumps, pg_execute, pg_fetchall, pg_fetchone
+
 _ALERTS: list[dict[str, Any]] = []
+_HYDRATED = False
+
+
+def _hydrate() -> None:
+    global _HYDRATED
+    if _HYDRATED:
+        return
+    rows = pg_fetchall(
+        """
+        SELECT id, alert_type, severity, message_fa, message_en, message_ar, subsidiary_code,
+               metric_name, metric_value, threshold_value, acknowledged, acknowledged_by_name,
+               raised_at, acknowledged_at, payload_json
+        FROM alerts ORDER BY id DESC LIMIT 500
+        """
+    )
+    loaded: list[dict[str, Any]] = []
+    for row in rows:
+        payload = row.get("payload_json") or {}
+        if isinstance(payload, str):
+            import json
+
+            payload = json.loads(payload)
+        if payload and payload.get("id"):
+            loaded.append(payload)
+            continue
+        loaded.append(
+            {
+                "id": row["id"],
+                "alert_type": row["alert_type"],
+                "severity": row["severity"],
+                "metric_name": row.get("metric_name"),
+                "metric_value": row.get("metric_value"),
+                "threshold_value": row.get("threshold_value"),
+                "subsidiary_code": row.get("subsidiary_code"),
+                "message_fa": row.get("message_fa"),
+                "message_en": row.get("message_en"),
+                "message_ar": row.get("message_ar"),
+                "acknowledged": bool(row.get("acknowledged")),
+                "acknowledged_by": row.get("acknowledged_by_name"),
+                "acknowledged_at": row["acknowledged_at"].isoformat() if row.get("acknowledged_at") else None,
+                "raised_at": row["raised_at"].isoformat() if row.get("raised_at") else None,
+            }
+        )
+    if loaded:
+        _ALERTS.clear()
+        _ALERTS.extend(loaded)
+    _HYDRATED = True
+
+
+def _persist(alert: dict[str, Any]) -> None:
+    pg_execute(
+        """
+        INSERT INTO alerts (
+            id, alert_type, severity, message_fa, message_en, message_ar, subsidiary_code,
+            metric_name, metric_value, threshold_value, acknowledged, acknowledged_by_name,
+            payload_json, raised_at
+        ) VALUES (
+            %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb, COALESCE(%s::timestamptz, now())
+        )
+        ON CONFLICT (id) DO UPDATE SET
+            acknowledged = EXCLUDED.acknowledged,
+            acknowledged_by_name = EXCLUDED.acknowledged_by_name,
+            acknowledged_at = CASE WHEN EXCLUDED.acknowledged THEN now() ELSE alerts.acknowledged_at END,
+            payload_json = EXCLUDED.payload_json
+        """,
+        (
+            alert["id"],
+            alert["alert_type"],
+            alert["severity"],
+            alert.get("message_fa") or "",
+            alert.get("message_en"),
+            alert.get("message_ar"),
+            alert.get("subsidiary_code"),
+            alert.get("metric_name"),
+            alert.get("metric_value"),
+            alert.get("threshold_value"),
+            bool(alert.get("acknowledged")),
+            alert.get("acknowledged_by"),
+            dumps(alert),
+            alert.get("raised_at"),
+        ),
+    )
 
 
 def raise_alert(
@@ -17,10 +101,16 @@ def raise_alert(
     subsidiary_code: str | None = None,
     region: str | None = None,
 ) -> dict[str, Any]:
+    _hydrate()
     deviation = abs(metric_value - threshold_value)
     deviation_pct = round(100 * deviation / max(abs(threshold_value), 1e-9), 2)
+    next_id = max((a["id"] for a in _ALERTS), default=0) + 1
+    # Prefer DB sequence if empty memory but DB has rows
+    row = pg_fetchone("SELECT COALESCE(MAX(id), 0) AS max_id FROM alerts")
+    if row:
+        next_id = max(next_id, int(row["max_id"]) + 1)
     alert = {
-        "id": (max((a["id"] for a in _ALERTS), default=0) + 1),
+        "id": next_id,
         "alert_type": alert_type,
         "severity": severity,
         "metric_name": metric_name,
@@ -47,6 +137,7 @@ def raise_alert(
         "raised_at": datetime.now(timezone.utc).isoformat(),
     }
     _ALERTS.insert(0, alert)
+    _persist(alert)
     return alert
 
 
@@ -57,6 +148,7 @@ def list_alerts(
     alert_type: str | None = None,
     only_active: bool = False,
 ) -> list[dict[str, Any]]:
+    _hydrate()
     rows = _ALERTS
     if severity:
         rows = [a for a in rows if a["severity"] == severity]
@@ -68,11 +160,13 @@ def list_alerts(
 
 
 def acknowledge(alert_id: int, by: str = "operator") -> dict[str, Any] | None:
+    _hydrate()
     for a in _ALERTS:
         if a["id"] == alert_id:
             a["acknowledged"] = True
             a["acknowledged_by"] = by
             a["acknowledged_at"] = datetime.now(timezone.utc).isoformat()
+            _persist(a)
             return a
     return None
 
