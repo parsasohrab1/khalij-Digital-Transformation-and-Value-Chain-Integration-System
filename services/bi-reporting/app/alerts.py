@@ -77,28 +77,76 @@ def acknowledge(alert_id: int, by: str = "operator") -> dict[str, Any] | None:
     return None
 
 
-def scan_budget_deviations() -> list[dict[str, Any]]:
+def scan_budget_deviations(
+    *,
+    kpis: dict[str, Any] | None = None,
+    subsidiary_code: str | None = None,
+    region: str | None = None,
+) -> list[dict[str, Any]]:
+    kpis = kpis or {}
     checks = [
-        ("production", "production_plan_tons", 950.0, 1000.0, "warning", "BIPC", "Khuzestan"),
-        ("sales", "sales_plan_usd", 1.8e6, 2.0e6, "warning", "NPC", "Tehran"),
-        ("budget", "opex_usd", 1.15e6, 1.0e6, "critical", "PIDMCO", "Assaluyeh"),
-        ("logistics", "avg_eta_days", 9.5, 7.0, "warning", "BIPC", "Hormozgan"),
+        (
+            "otif",
+            "otif_percent",
+            float(kpis.get("otif_percent", 88.0)),
+            90.0,
+            "warning" if float(kpis.get("otif_percent", 88.0)) < 90 else "info",
+            subsidiary_code or "BIPC",
+            region or "Khuzestan",
+        ),
+        (
+            "margin",
+            "operating_margin_percent",
+            float(kpis.get("operating_margin_percent", 18.0)),
+            20.0,
+            "warning" if float(kpis.get("operating_margin_percent", 18.0)) < 20 else "info",
+            subsidiary_code or "NPC",
+            region or "Tehran",
+        ),
+        (
+            "logistics",
+            "avg_eta_days",
+            float(kpis.get("avg_eta_days", 8.0)),
+            7.0,
+            "warning" if float(kpis.get("avg_eta_days", 8.0)) > 7 else "info",
+            subsidiary_code or "PIDMCO",
+            region or "Assaluyeh",
+        ),
+        (
+            "fill",
+            "warehouse_fill_rate_percent",
+            float(kpis.get("warehouse_fill_rate_percent", 70.0)),
+            75.0,
+            "warning" if float(kpis.get("warehouse_fill_rate_percent", 70.0)) < 75 else "info",
+            subsidiary_code or "ARPC",
+            region or "Assaluyeh",
+        ),
     ]
     created = []
-    for alert_type, metric, value, threshold, severity, sub, region in checks:
-        breached = (severity == "critical" and value > threshold) or (
-            severity == "warning" and abs(value - threshold) / threshold > 0.05
-        )
-        if breached:
-            created.append(
-                raise_alert(
-                    alert_type=alert_type,
-                    severity=severity,
-                    metric_name=metric,
-                    metric_value=value,
-                    threshold_value=threshold,
-                    subsidiary_code=sub,
-                    region=region,
-                )
+    for alert_type, metric, value, threshold, severity, sub, reg in checks:
+        if severity == "info":
+            continue
+        created.append(
+            raise_alert(
+                alert_type=alert_type,
+                severity=severity,
+                metric_name=metric,
+                metric_value=round(value, 2),
+                threshold_value=threshold,
+                subsidiary_code=sub,
+                region=reg,
             )
+        )
+    if not created:
+        created.append(
+            raise_alert(
+                alert_type="budget",
+                severity="info",
+                metric_name="holding_health",
+                metric_value=1.0,
+                threshold_value=1.0,
+                subsidiary_code=subsidiary_code,
+                region=region,
+            )
+        )
     return created

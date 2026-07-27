@@ -207,7 +207,13 @@ async def verify_otp(
         outcome="success",
         ip=client_ip,
     )
-    return {"access_token": token, "token_type": "bearer", "role": user["role"]}
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "role": user["role"],
+        "employee_code": user["employee_code"],
+        "full_name": user.get("full_name"),
+    }
 
 
 @app.get("/security/profile")
@@ -347,6 +353,25 @@ async def i18n(locale: str, user: dict = Depends(get_current_user)) -> dict:
     return await _proxy("bi-reporting", "GET", f"/i18n/{locale}")
 
 
+@app.get("/filters")
+async def filters(user: dict = Depends(get_current_user)) -> dict:
+    return await _proxy("bi-reporting", "GET", "/filters")
+
+
+@app.get("/roles/{role}/views")
+async def role_views(role: str, user: dict = Depends(get_current_user)) -> dict:
+    return await _proxy("bi-reporting", "GET", f"/roles/{role}/views")
+
+
+@app.get("/auth/me")
+async def auth_me(user: dict = Depends(get_current_user)) -> dict:
+    return {
+        "employee_code": user.get("employee_code"),
+        "role": user.get("role"),
+        "sub": user.get("sub"),
+    }
+
+
 @app.get("/patent/capabilities")
 async def patent_capabilities(user: dict = Depends(get_current_user)) -> dict:
     """خلاصه قابلیت‌های نوآورانه ثبت اختراع پیاده‌سازی‌شده در زیرساخت."""
@@ -442,6 +467,20 @@ async def create_order(payload: dict, user: dict = Depends(require_role("sales",
     return await _proxy("order-to-cash", "POST", "/orders", json=payload)
 
 
+@app.get("/orders")
+async def list_orders(
+    limit: int = 50, user: dict = Depends(require_role("sales", "logistics", "supervisor", "analyst", "admin"))
+) -> list:
+    return await _proxy("order-to-cash", "GET", "/orders", params={"limit": limit})
+
+
+@app.get("/orders/{order_number}")
+async def get_order(
+    order_number: str, user: dict = Depends(require_role("sales", "logistics", "supervisor", "analyst", "admin"))
+) -> dict:
+    return await _proxy("order-to-cash", "GET", f"/orders/{order_number}")
+
+
 @app.post("/orders/{order_number}/invoice")
 async def invoice_order(
     order_number: str, user: dict = Depends(require_role("sales", "supervisor", "admin"))
@@ -475,6 +514,13 @@ async def create_shipment(
     return await _proxy("logistics", "POST", "/shipments", json=payload)
 
 
+@app.get("/shipments")
+async def list_shipments(
+    limit: int = 50, user: dict = Depends(require_role("logistics", "supervisor", "analyst", "admin"))
+) -> list:
+    return await _proxy("logistics", "GET", "/shipments", params={"limit": limit})
+
+
 @app.post("/shipments/live-track")
 async def live_track(
     payload: dict, user: dict = Depends(require_role("logistics", "supervisor", "admin"))
@@ -506,5 +552,20 @@ async def customer_portal(order_number: str, locale: str = "fa") -> dict:
 
 
 @app.get("/reports/cost-per-ton")
-async def cost_per_ton(user: dict = Depends(require_role("analyst", "executive", "admin"))) -> dict:
-    return await _proxy("bi-reporting", "GET", "/reports/cost-per-ton")
+async def cost_per_ton(
+    subsidiary_code: str | None = None,
+    product_grade: str | None = None,
+    region: str | None = None,
+    period: str = "30d",
+    locale: str = "fa",
+    user: dict = Depends(require_role("analyst", "executive", "admin")),
+) -> dict:
+    params = {
+        "subsidiary_code": subsidiary_code,
+        "product_grade": product_grade,
+        "region": region,
+        "period": period,
+        "locale": locale,
+    }
+    params = {k: v for k, v in params.items() if v is not None}
+    return await _proxy("bi-reporting", "GET", "/reports/cost-per-ton", params=params)

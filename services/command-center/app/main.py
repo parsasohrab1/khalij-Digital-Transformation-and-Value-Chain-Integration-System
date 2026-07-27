@@ -17,13 +17,13 @@ logger = logging.getLogger(__name__)
 
 STATIC_DIR = Path(__file__).resolve().parents[1] / "static"
 
-app = FastAPI(title="Khalij DVC - Command Center", version="4.0.0")
+app = FastAPI(title="Khalij DVC - Command Center", version="5.0.0")
 app.mount("/assets", StaticFiles(directory=STATIC_DIR), name="assets")
 
 
 @app.get("/health")
 async def health() -> dict:
-    return {"status": "ok", "service": "command-center", "phase": 4}
+    return {"status": "ok", "service": "command-center", "phase": 5}
 
 
 @app.get("/")

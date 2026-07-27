@@ -1,22 +1,22 @@
 [
   {
-    "run_id": "14ee6f12-95ff-4974-b7d6-2a3f04f77474",
-    "model_name": "ensemble",
+    "run_id": "409654cb-8e61-4a7c-9888-e1b7821979c1",
+    "model_name": "prophet",
     "metrics": {
-      "holding_margin_usd": 550634.08,
-      "latency_ms": 4435.13,
-      "horizon_days": 90.0
+      "holding_margin_usd": 191663.09,
+      "latency_ms": 985.78,
+      "horizon_days": 30.0
     },
     "params": {
-      "oil_price": 78.0,
-      "feedstock": 3500.0,
-      "model": "ensemble"
+      "oil_price": 75.0,
+      "feedstock": 2500.0,
+      "model": "prophet"
     },
     "tags": {
       "patent": "closed-loop-value-chain",
       "phase": "2"
     },
-    "created_at": "2026-07-25T13:10:47.651429+00:00",
+    "created_at": "2026-07-27T14:43:00.745497+00:00",
     "backend": "local"
   }
 ]

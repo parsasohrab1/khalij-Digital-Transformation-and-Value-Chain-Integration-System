@@ -1,21 +1,37 @@
 (() => {
   const state = {
     locale: localStorage.getItem("dvc_locale") || "fa",
-    role: localStorage.getItem("dvc_role") || "analyst",
+    role: localStorage.getItem("dvc_role") || "admin",
+    token: localStorage.getItem("dvc_token") || "",
+    pendingToken: "",
     view: "dashboard",
     messages: {},
-    views: ["dashboard", "cost", "distribution", "alerts", "optimize"],
+    views: ["dashboard", "cost", "distribution", "alerts", "optimize", "orders", "logistics"],
+    lastShipment: "",
   };
 
-  const bi = () => window.DVC_BI_BASE.replace(/\/$/, "");
   const api = () => window.DVC_API_BASE.replace(/\/$/, "");
-
   const $ = (sel) => document.querySelector(sel);
   const $$ = (sel) => [...document.querySelectorAll(sel)];
 
-  async function fetchJSON(url, options) {
-    const res = await fetch(url, options);
-    if (!res.ok) throw new Error(`${res.status} ${url}`);
+  function authHeaders(extra) {
+    const h = { ...(extra || {}) };
+    if (state.token) h.Authorization = `Bearer ${state.token}`;
+    return h;
+  }
+
+  async function fetchJSON(url, options = {}) {
+    const opts = { ...options, headers: authHeaders(options.headers || {}) };
+    const res = await fetch(url, opts);
+    if (res.status === 401) {
+      logout(true);
+      throw new Error("unauthorized");
+    }
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`${res.status} ${url} ${text.slice(0, 180)}`);
+    }
+    if (res.status === 204) return null;
     return res.json();
   }
 
@@ -44,10 +60,10 @@
 
   function currentFilters() {
     return {
-      subsidiary_code: $("#subsidiary").value,
-      product_grade: $("#product").value,
-      region: $("#region").value,
-      period: $("#period").value,
+      subsidiary_code: $("#subsidiary")?.value,
+      product_grade: $("#product")?.value,
+      region: $("#region")?.value,
+      period: $("#period")?.value || "30d",
       locale: state.locale,
       role: state.role,
     };
@@ -64,9 +80,25 @@
       const allowed = state.views.includes(btn.dataset.view);
       btn.style.display = allowed ? "" : "none";
     });
-    if (!state.views.includes(state.view)) {
-      setActiveView(state.views[0] || "dashboard");
+    if (!state.views.includes(state.view)) setActiveView(state.views[0] || "dashboard");
+  }
+
+  function showApp(loggedIn) {
+    $("#loginScreen").classList.toggle("hidden", loggedIn);
+    $("#appShell").classList.toggle("hidden", !loggedIn);
+    if (loggedIn) {
+      $("#userBadge").textContent = `${localStorage.getItem("dvc_user") || "user"} · ${state.role}`;
     }
+  }
+
+  function logout(silent) {
+    state.token = "";
+    state.pendingToken = "";
+    localStorage.removeItem("dvc_token");
+    localStorage.removeItem("dvc_role");
+    localStorage.removeItem("dvc_user");
+    showApp(false);
+    if (!silent) $("#loginError").hidden = true;
   }
 
   function renderKpis(dash) {
@@ -87,12 +119,10 @@
       </article>`
       )
       .join("");
-    if (dash.holding_optimized_margin_usd != null) {
+    if (dash.kpis?.data_source) {
       $("#kpiGrid").insertAdjacentHTML(
         "beforeend",
-        `<article class="kpi"><div class="label">Holding Opt. Margin</div><div class="value">${Number(
-          dash.holding_optimized_margin_usd
-        ).toLocaleString()}</div></article>`
+        `<article class="kpi"><div class="label">Data</div><div class="value" style="font-size:1rem">${dash.kpis.data_source}</div></article>`
       );
     }
     $("#generatedAt").textContent = dash.generated_at || "";
@@ -126,30 +156,31 @@
   }
 
   function renderTable(el, columns, rows) {
-    if (!rows.length) {
+    if (!rows || !rows.length) {
       el.innerHTML = `<p class="muted">${t("no_alerts")}</p>`;
       return;
     }
     el.innerHTML = `<table><thead><tr>${columns
       .map((c) => `<th>${c.label}</th>`)
       .join("")}</tr></thead><tbody>${rows
-      .map(
-        (r) =>
-          `<tr>${columns.map((c) => `<td>${r[c.key] ?? ""}</td>`).join("")}</tr>`
-      )
+      .map((r) => `<tr>${columns.map((c) => `<td>${r[c.key] ?? ""}</td>`).join("")}</tr>`)
       .join("")}</tbody></table>`;
   }
 
   async function loadFilters() {
-    const data = await fetchJSON(`${bi()}/filters`);
+    const data = await fetchJSON(`${api()}/filters`);
     const fill = (sel, items, labelFn) => {
       const el = $(sel);
       const cur = el.value;
-      el.innerHTML = `<option value="">${t("all")}</option>` + items.map((x) => {
-        const val = typeof x === "string" ? x : x.code;
-        const label = typeof x === "string" ? x : labelFn(x);
-        return `<option value="${val}">${label}</option>`;
-      }).join("");
+      el.innerHTML =
+        `<option value="">${t("all")}</option>` +
+        items
+          .map((x) => {
+            const val = typeof x === "string" ? x : x.code;
+            const label = typeof x === "string" ? x : labelFn(x);
+            return `<option value="${val}">${label}</option>`;
+          })
+          .join("");
       el.value = cur;
     };
     fill("#subsidiary", data.subsidiaries, (x) => (state.locale === "en" ? x.name_en : x.name_fa));
@@ -159,18 +190,16 @@
 
   async function loadDashboard() {
     const q = qs(currentFilters());
-    const dash = await fetchJSON(`${bi()}/dashboard?${q}`);
+    const dash = await fetchJSON(`${api()}/command-center/dashboard?${q}`);
     state.views = dash.views || state.views;
     applyRoleNav();
     renderKpis(dash);
-    const ts = await fetchJSON(
-      `${bi()}/timeseries?${qs({ ...currentFilters(), metric: "operating_margin_percent" })}`
-    );
+    const ts = await fetchJSON(`${api()}/timeseries?${qs({ ...currentFilters(), metric: "operating_margin_percent" })}`);
     drawTrend(ts.points || []);
   }
 
   async function loadCost() {
-    const data = await fetchJSON(`${bi()}/reports/cost-per-ton?${qs(currentFilters())}`);
+    const data = await fetchJSON(`${api()}/reports/cost-per-ton?${qs(currentFilters())}`);
     renderTable(
       $("#costTable"),
       [
@@ -186,7 +215,7 @@
   }
 
   async function loadDistribution() {
-    const data = await fetchJSON(`${bi()}/reports/distribution?${qs(currentFilters())}`);
+    const data = await fetchJSON(`${api()}/reports/distribution?${qs(currentFilters())}`);
     renderTable(
       $("#distTable"),
       [
@@ -202,7 +231,7 @@
   }
 
   async function loadAlerts() {
-    const data = await fetchJSON(`${bi()}/alerts?${qs({ locale: state.locale, only_active: "false", limit: 30 })}`);
+    const data = await fetchJSON(`${api()}/alerts?${qs({ locale: state.locale, only_active: "false", limit: 30 })}`);
     const box = $("#alertsList");
     const rows = data.alerts || [];
     if (!rows.length) {
@@ -226,7 +255,7 @@
       .join("");
     box.querySelectorAll("[data-ack]").forEach((btn) => {
       btn.addEventListener("click", async () => {
-        await fetchJSON(`${bi()}/alerts/${btn.dataset.ack}/acknowledge`, {
+        await fetchJSON(`${api()}/alerts/${btn.dataset.ack}/acknowledge`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ by: state.role }),
@@ -236,52 +265,185 @@
     });
   }
 
+  async function loadOrders() {
+    const inv = await fetchJSON(`${api()}/inventory`);
+    const rows = inv.warehouses || (Array.isArray(inv) ? inv : []);
+    renderTable(
+      $("#inventoryTable"),
+      [
+        { key: "code", label: "WH" },
+        { key: "city", label: "City" },
+        { key: "total_tons", label: "Total t" },
+        { key: "fill_rate_pct", label: "Fill %" },
+        { key: "capacity_tons", label: "Capacity" },
+      ],
+      rows
+    );
+    try {
+      const orders = await fetchJSON(`${api()}/orders?limit=20`);
+      renderTable(
+        $("#ordersTable"),
+        [
+          { key: "order_number", label: "Order" },
+          { key: "product_grade", label: "Product" },
+          { key: "quantity_tons", label: "Tons" },
+          { key: "status", label: "Status" },
+          { key: "allocated_warehouse", label: "WH" },
+        ],
+        Array.isArray(orders) ? orders : orders.items || []
+      );
+    } catch (_) {
+      /* list may be empty on fresh start */
+    }
+  }
+
+  async function loadLogistics() {
+    const ports = await fetchJSON(`${api()}/ports/iran`);
+    const list = ports.ports || [];
+    renderTable(
+      $("#portsTable"),
+      [
+        { key: "port_key", label: "Port" },
+        { key: "name_fa", label: "Name" },
+        { key: "berths", label: "Berths" },
+        { key: "congestion_hours", label: "Congestion h" },
+      ],
+      list.map((p) => ({
+        port_key: p.port_key || p.code || p.pmo_code,
+        name_fa: p.name_fa || p.name_en || "",
+        berths: p.berths ?? "",
+        congestion_hours: p.congestion_hours ?? p.base_congestion_hours ?? "",
+      }))
+    );
+    try {
+      const ships = await fetchJSON(`${api()}/shipments?limit=20`);
+      renderTable(
+        $("#shipmentsTable"),
+        [
+          { key: "shipment_number", label: "Shipment" },
+          { key: "origin_port", label: "Origin" },
+          { key: "destination", label: "Dest" },
+          { key: "status", label: "Status" },
+          { key: "eta_days", label: "ETA" },
+        ],
+        Array.isArray(ships) ? ships : []
+      );
+    } catch (_) {
+      /* ignore */
+    }
+  }
+
   async function refreshAll() {
     await loadFilters();
     await loadDashboard();
     if (state.views.includes("cost")) await loadCost();
     if (state.views.includes("distribution")) await loadDistribution();
     if (state.views.includes("alerts")) await loadAlerts();
+    if (state.views.includes("orders")) await loadOrders();
+    if (state.views.includes("logistics")) await loadLogistics();
   }
 
   async function initI18n() {
-    const data = await fetchJSON(`${bi()}/i18n/${state.locale}`);
-    state.messages = data.messages || {};
+    try {
+      const data = await fetchJSON(`${api()}/i18n/${state.locale}`);
+      state.messages = data.messages || {};
+    } catch (_) {
+      state.messages = {};
+    }
     applyI18n();
   }
 
   async function initRole() {
-    const data = await fetchJSON(`${bi()}/roles/${state.role}/views`);
-    state.views = data.views || state.views;
+    try {
+      const data = await fetchJSON(`${api()}/roles/${state.role}/views`);
+      state.views = data.views || state.views;
+    } catch (_) {
+      /* keep defaults */
+    }
     applyRoleNav();
+  }
+
+  async function handleLogin(e) {
+    e.preventDefault();
+    const err = $("#loginError");
+    err.hidden = true;
+    const employee_code = $("#loginUser").value.trim();
+    const password = $("#loginPass").value;
+    const otp = $("#loginOtp").value.trim();
+    try {
+      if (!state.pendingToken) {
+        const login = await fetch(`${api()}/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ employee_code, password }),
+        }).then(async (r) => {
+          if (!r.ok) throw new Error(await r.text());
+          return r.json();
+        });
+        if (!login.requires_otp && login.access_token) {
+          state.token = login.access_token;
+          state.role = login.role || "admin";
+          localStorage.setItem("dvc_token", state.token);
+          localStorage.setItem("dvc_role", state.role);
+          localStorage.setItem("dvc_user", employee_code);
+          await afterLogin();
+          return;
+        }
+        state.pendingToken = login.pending_token;
+        $("#otpField").classList.remove("hidden");
+        err.textContent = "OTP required";
+        err.hidden = false;
+        return;
+      }
+      const verified = await fetch(`${api()}/auth/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pending_token: state.pendingToken, otp_code: otp }),
+      }).then(async (r) => {
+        if (!r.ok) throw new Error(await r.text());
+        return r.json();
+      });
+      state.token = verified.access_token;
+      state.role = verified.role || "admin";
+      state.pendingToken = "";
+      localStorage.setItem("dvc_token", state.token);
+      localStorage.setItem("dvc_role", state.role);
+      localStorage.setItem("dvc_user", verified.employee_code || employee_code);
+      await afterLogin();
+    } catch (ex) {
+      err.textContent = String(ex.message || ex);
+      err.hidden = false;
+      state.pendingToken = "";
+      $("#otpField").classList.add("hidden");
+    }
+  }
+
+  async function afterLogin() {
+    showApp(true);
+    await initI18n();
+    await initRole();
+    await refreshAll();
   }
 
   function bind() {
     $("#locale").value = state.locale;
-    $("#role").value = state.role;
+    $("#loginForm").addEventListener("submit", handleLogin);
+    $("#logoutBtn").addEventListener("click", () => logout(false));
     $("#locale").addEventListener("change", async (e) => {
       state.locale = e.target.value;
       localStorage.setItem("dvc_locale", state.locale);
       await initI18n();
       await refreshAll();
     });
-    $("#role").addEventListener("change", async (e) => {
-      state.role = e.target.value;
-      localStorage.setItem("dvc_role", state.role);
-      await initRole();
-      await refreshAll();
-    });
     ["#subsidiary", "#product", "#region", "#period"].forEach((sel) => {
       $(sel).addEventListener("change", () => refreshAll());
     });
     $$(".nav button").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        setActiveView(btn.dataset.view);
-      });
+      btn.addEventListener("click", () => setActiveView(btn.dataset.view));
     });
     $("#refreshBtn").addEventListener("click", () => refreshAll());
     $("#budgetCheckBtn").addEventListener("click", async () => {
-      await fetchJSON(`${bi()}/alerts/check-budgets`, { method: "POST" });
+      await fetchJSON(`${api()}/alerts/check-budgets`, { method: "POST" });
       setActiveView("alerts");
       await loadAlerts();
     });
@@ -299,36 +461,84 @@
         });
         $("#optimizeOut").textContent = JSON.stringify(out, null, 2);
       } catch (err) {
-        // fallback direct to analytics if gateway auth blocks anonymous UI
-        try {
-          const out = await fetchJSON("http://localhost:8002/optimize/integrated", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              horizon_days: 90,
-              available_feedstock_tons: 3500,
-              oil_price_usd_bbl: 78,
-              model: "ensemble",
-            }),
-          });
-          $("#optimizeOut").textContent = JSON.stringify(out, null, 2);
-        } catch (e2) {
-          $("#optimizeOut").textContent = String(err);
-        }
+        $("#optimizeOut").textContent = String(err);
+      }
+    });
+    $("#orderForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      try {
+        const out = await fetchJSON(`${api()}/orders`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            channel: "contract",
+            product_grade: $("#orderProduct").value,
+            quantity_tons: Number($("#orderTons").value),
+            value_usd: Number($("#orderValue").value),
+            destination: $("#orderDest").value,
+            auto_invoice: true,
+          }),
+        });
+        $("#orderOut").textContent = JSON.stringify(out, null, 2);
+        $("#shipOrder").value = out.order_number || $("#shipOrder").value;
+        await loadOrders();
+      } catch (err) {
+        $("#orderOut").textContent = String(err);
+      }
+    });
+    $("#shipForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      try {
+        const out = await fetchJSON(`${api()}/shipments`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            order_number: $("#shipOrder").value,
+            origin_port: $("#shipOrigin").value,
+            destination: $("#shipDest").value,
+            product_grade: $("#shipProduct").value,
+            quantity_tons: Number($("#shipTons").value),
+            value_usd: 200000,
+          }),
+        });
+        state.lastShipment = out.shipment_number;
+        $("#shipOut").textContent = JSON.stringify(out, null, 2);
+        await loadLogistics();
+      } catch (err) {
+        $("#shipOut").textContent = String(err);
+      }
+    });
+    $("#trackBtn").addEventListener("click", async () => {
+      try {
+        const sn = state.lastShipment || ($("#shipmentsTable td")?.textContent || "");
+        const out = await fetchJSON(`${api()}/shipments/live-track`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ shipment_number: sn, progress: 0.55 }),
+        });
+        $("#shipOut").textContent = JSON.stringify(out, null, 2);
+        await loadLogistics();
+      } catch (err) {
+        $("#shipOut").textContent = String(err);
       }
     });
   }
 
   async function boot() {
     bind();
-    try {
-      await initI18n();
-      await initRole();
-      await refreshAll();
-    } catch (err) {
-      console.error(err);
-      $("#kpiGrid").innerHTML = `<p class="muted">BI API unreachable at ${bi()}. Start bi-reporting on :8005</p>`;
+    if (state.token) {
+      try {
+        const me = await fetchJSON(`${api()}/auth/me`);
+        state.role = me.role || state.role;
+        localStorage.setItem("dvc_role", state.role);
+        await afterLogin();
+        return;
+      } catch (_) {
+        logout(true);
+      }
     }
+    showApp(false);
+    applyI18n();
   }
 
   boot();

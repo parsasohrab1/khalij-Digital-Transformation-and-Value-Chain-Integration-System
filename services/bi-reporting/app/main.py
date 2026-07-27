@@ -15,6 +15,7 @@ from shared.settings import get_settings
 
 from .alerts import acknowledge, list_alerts, raise_alert, scan_budget_deviations
 from .catalog import filters_catalog
+from .data_source import data_source_meta
 from .kpis import build_kpis, build_timeseries, distribution_performance
 from .reports import cost_margin_report
 
@@ -25,7 +26,7 @@ logger = logging.getLogger(__name__)
 app = FastAPI(
     title="Khalij DVC - BI & Reporting Phase 4",
     description="Interactive Command Center analytics + profitability + smart alerts",
-    version="4.0.0",
+    version="4.1.0",
 )
 
 app.add_middleware(
@@ -38,12 +39,12 @@ app.add_middleware(
 _redis: redis.Redis | None = None
 
 ROLE_VIEWS = {
-    "executive": ["dashboard", "cost", "alerts"],
-    "analyst": ["dashboard", "cost", "distribution", "alerts", "optimize", "timeseries"],
-    "logistics": ["dashboard", "distribution", "alerts"],
-    "sales": ["dashboard", "alerts"],
-    "admin": ["dashboard", "cost", "distribution", "alerts", "optimize", "timeseries"],
-    "supervisor": ["dashboard", "cost", "distribution", "alerts"],
+    "executive": ["dashboard", "cost", "alerts", "optimize"],
+    "analyst": ["dashboard", "cost", "distribution", "alerts", "optimize", "orders", "logistics"],
+    "logistics": ["dashboard", "distribution", "alerts", "logistics"],
+    "sales": ["dashboard", "alerts", "orders"],
+    "admin": ["dashboard", "cost", "distribution", "alerts", "optimize", "orders", "logistics"],
+    "supervisor": ["dashboard", "cost", "distribution", "alerts", "orders", "logistics"],
 }
 
 
@@ -75,11 +76,13 @@ class AckRequest(BaseModel):
 
 @app.get("/health")
 async def health() -> dict:
+    meta = data_source_meta()
     return {
         "status": "ok",
         "service": "bi-reporting",
         "phase": 4,
         "patent": "integrated-profitability-reporting",
+        "data_source": meta,
     }
 
 
@@ -174,6 +177,7 @@ async def cost_per_ton(
     unit_code: str | None = None,
     product_grade: str | None = None,
     region: str | None = None,
+    period: str = Query(default="30d", pattern="^(7d|30d|90d)$"),
     locale: str = "fa",
 ) -> dict:
     report = cost_margin_report(
@@ -181,6 +185,7 @@ async def cost_per_ton(
         unit_code=unit_code,
         product_grade=product_grade,
         region=region,
+        period=period,
     )
     report["title"] = t("cost_per_ton", locale)
     report["margin_title"] = t("margin_per_unit", locale)
@@ -227,6 +232,17 @@ async def ack_alert(alert_id: int, body: AckRequest) -> dict:
 
 
 @app.post("/alerts/check-budgets")
-async def check_budgets() -> dict:
-    created = scan_budget_deviations()
-    return {"created": len(created), "alerts": created}
+async def check_budgets(
+    subsidiary_code: str | None = None,
+    product_grade: str | None = None,
+    region: str | None = None,
+    period: str = "30d",
+) -> dict:
+    kpis = build_kpis(
+        subsidiary_code=subsidiary_code,
+        product_grade=product_grade,
+        region=region,
+        period=period,
+    )
+    created = scan_budget_deviations(kpis=kpis, subsidiary_code=subsidiary_code, region=region)
+    return {"created": len(created), "alerts": created, "kpis": kpis}

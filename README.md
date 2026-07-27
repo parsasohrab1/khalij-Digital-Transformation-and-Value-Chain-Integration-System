@@ -1,5 +1,58 @@
 # khalij-Digital-Transformation-and-Value-Chain-Integration-System
 
+## Quick start (Demo MVP)
+
+```bash
+# 1) Environment
+cp .env.example .env
+
+# 2) Seed CSV (auto-generates if missing)
+python scripts/ensure_seed_data.py
+
+# 3) Stack
+docker compose up --build -d
+
+# 4) Open Command Center
+# UI:  http://localhost:8010
+# API: http://localhost:8000/docs
+```
+
+**Demo login**
+- Employee: `demo-admin`
+- Password: `ChangeMe123!`
+- OTP: TOTP with secret `3MYXLVCKBIRJUTD6` (Google Authenticator / `pyotp`)
+
+```bash
+python -c "import pyotp; print(pyotp.TOTP('3MYXLVCKBIRJUTD6').now())"
+```
+
+**Offline / local PoC (no Docker)**
+```bash
+python scripts/ensure_seed_data.py
+python scripts/demo_patent_poc.py
+python scripts/security_scan.py
+python -m pytest tests/test_smoke.py -q
+```
+
+**Production-like TLS + HA**
+```bash
+python scripts/generate_tls_certs.py
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
+# https://localhost  (nginx → Command Center + /api → gateway pool)
+```
+
+| Service | Port |
+|---------|------|
+| API Gateway | 8000 |
+| Data Integration | 8001 |
+| Supply Chain Analytics | 8002 |
+| Logistics | 8003 |
+| Order-to-Cash | 8004 |
+| BI Reporting | 8005 |
+| Command Center UI | 8010 |
+
+---
+
 ۱. مقدمه (Introduction)
 هدف: پیاده‌سازی یک پلتفرم یکپارچه مبتنی بر داده که زنجیره تأمین، تولید، توزیع و فروش محصولات پتروشیمی را به‌صورت لحظه‌ای به هم متصل کرده و با استفاده از هوش مصنوعی، تصمیم‌گیری‌های استراتژیک و عملیاتی را بهینه‌سازی کند. این سیستم، دیدگاه "از میدان تا بازار" (Well-to-Market) را محقق می‌سازد.
 
