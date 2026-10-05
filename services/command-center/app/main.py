@@ -1,4 +1,4 @@
-"""Command Center UI — پنل مدیریتی هلدینگ (فاز ۴)."""
+"""Command Center UI — holding management panel (phase 4)."""
 from __future__ import annotations
 
 import logging

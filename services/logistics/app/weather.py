@@ -1,4 +1,4 @@
-"""مدل آب‌وهوا برای تأخیر ETA (خلیج فارس / دریای عمان)."""
+"""Weather model for ETA delay (Persian Gulf / Oman Sea)."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -19,14 +19,14 @@ def estimate_weather(
 ) -> dict[str, Any]:
     month = season_month or datetime.now(timezone.utc).month
     base = SEA_REGIONS.get(region, SEA_REGIONS["persian_gulf"])
-    # تابستان/زمستان خلیج فارس
+    # Persian Gulf summer/winter
     monsoon = 1.35 if month in {6, 7, 8, 12, 1} else 1.0
     rng = np.random.default_rng(month * 17)
     wave_m = float(base["wave_m_base"] * monsoon * (0.85 + 0.3 * rng.random()))
     wind_kt = float(base["wind_kt_base"] * monsoon * (0.85 + 0.3 * rng.random()))
     visibility_nm = float(max(2.0, 12.0 - 0.2 * wind_kt + rng.normal(0, 0.5)))
 
-    # تأخیر: موج>۲م یا باد>۲۵kt
+    # Delay: wave>2m or wind>25kt
     delay_hours = 0.0
     if wave_m > 2.0:
         delay_hours += (wave_m - 2.0) * 6

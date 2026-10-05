@@ -1,4 +1,4 @@
-"""کانکتور PostgreSQL واقعی + fallback سنتتیک."""
+"""Real PostgreSQL connector + synthetic fallback."""
 from __future__ import annotations
 
 from typing import Any

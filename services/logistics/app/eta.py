@@ -1,4 +1,4 @@
-"""محاسبه ETA با آب‌وهوا + ترافیک بندر + سرعت واقعی AIS/GPS."""
+"""ETA calculation with weather + port traffic + actual AIS/GPS speed."""
 from __future__ import annotations
 
 import math

@@ -1,4 +1,4 @@
-"""موجودی واقعی انبارها — حافظه + Postgres inventory_levels."""
+"""Actual warehouse inventory — memory + Postgres inventory_levels."""
 from __future__ import annotations
 
 from copy import deepcopy

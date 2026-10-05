@@ -1,4 +1,4 @@
-"""ثبت رخدادهای امنیتی و عملیاتی (Audit Log) — حافظه + Postgres."""
+"""Recording security and operational events (Audit Log) — memory + Postgres."""
 from __future__ import annotations
 
 import json

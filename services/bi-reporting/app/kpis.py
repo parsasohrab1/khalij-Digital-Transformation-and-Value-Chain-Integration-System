@@ -1,4 +1,4 @@
-"""تولید KPI و سری‌زمانی از CSV واقعی (با fallback deterministic)."""
+"""Generate KPIs and time series from real CSV (with deterministic fallback)."""
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone

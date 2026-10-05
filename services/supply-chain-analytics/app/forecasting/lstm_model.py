@@ -1,4 +1,4 @@
-"""LSTM سبک با NumPy برای پیش‌بینی توالی تقاضا (بدون وابستگی به PyTorch)."""
+"""Light LSTM with NumPy for demand sequence forecasting (without PyTorch dependency)."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -83,12 +83,12 @@ def _init_lstm(hidden: int = 8, rng: np.random.Generator | None = None) -> dict:
 
 
 def fit_lstm(y: np.ndarray, window: int = 32, epochs: int = 5, hidden: int = 8, lr: float = 0.01) -> TinyLSTM:
-    """آموزش بسیار سبک با گرادیان تقریبی روی خروجی (برای PoC ثبت اختراع)."""
+    """Very light training with an approximate gradient on the output (for the patent PoC)."""
     y = np.asarray(y, dtype=float)
     y_mean, y_std = float(np.mean(y)), float(np.std(y) + 1e-9)
     yn = (y - y_mean) / y_std
     params = _init_lstm(hidden)
-    # آموزش ساده: فقط W_y / b_y با هدف میانگین پنجره بعدی (پایدارتر از BPTT کامل)
+    # Simple training: only W_y / b_y targeting the mean of the next window (more stable than full BPTT)
     for _ in range(epochs):
         for i in range(window, len(yn) - 1):
             target = yn[i]

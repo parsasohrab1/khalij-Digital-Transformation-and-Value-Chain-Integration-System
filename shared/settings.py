@@ -1,4 +1,4 @@
-"""پیکربندی مشترک تمام سرویس‌ها؛ مقادیر از متغیرهای محیطی (.env) خوانده می‌شوند."""
+"""Shared configuration of all services; values are read from environment variables (.env)."""
 from functools import lru_cache
 
 from pydantic import Field

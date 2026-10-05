@@ -411,7 +411,7 @@ async def customer_order_status(order_number: str, locale: str = "fa") -> dict:
                 _SHIPMENTS[payload["shipment_number"]] = payload
     if not matched:
         msg = {
-            "fa": "سفارشی با این شماره یافت نشد یا هنوز ارسال نشده است",
+            "fa": "No order with this number was found or it has not been shipped yet",
             "en": "Order not found or not yet shipped",
             "ar": "لم يتم العثور على الطلب أو لم يتم شحنه بعد",
         }
@@ -420,7 +420,7 @@ async def customer_order_status(order_number: str, locale: str = "fa") -> dict:
     s = matched[0]
     customs = by_shipment(s["shipment_number"])
     msg = {
-        "fa": f"وضعیت محموله: {s['status']} — ETA حدود {s.get('eta_days')} روز",
+        "fa": f"Shipment status: {s['status']} — ETA about {s.get('eta_days')} days",
         "en": f"Shipment status: {s['status']} — ETA ~{s.get('eta_days')} days",
         "ar": f"حالة الشحنة: {s['status']} — الوصول خلال {s.get('eta_days')} أيام تقريباً",
     }

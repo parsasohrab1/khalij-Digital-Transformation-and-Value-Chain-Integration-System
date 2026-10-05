@@ -1,4 +1,4 @@
-"""دروازه API / Command Center — نقطه ورود واحد به میکروسرویس‌های زنجیره ارزش (R-GEN-02)."""
+"""API Gateway / Command Center — single entry point to the value chain microservices (R-GEN-02)."""
 from __future__ import annotations
 
 import logging
@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Khalij DVC - Command Center API Gateway",
-    description="پنل مدیریتی یکپارچه پایش کل زنجیره ارزش",
+    description="Integrated management panel for monitoring the entire value chain",
     version="5.0.0",
 )
 
@@ -98,13 +98,13 @@ async def health() -> dict:
 
 @app.get("/bench/ping")
 async def bench_ping() -> dict:
-    """مسیر سبک برای اندازه‌گیری ظرفیت افقی (NFR-SCL-01)."""
+    """Lightweight path for measuring horizontal capacity (NFR-SCL-01)."""
     return {"pong": True, "target_tps": settings.target_tps}
 
 
 @app.get("/health/ha")
 async def health_ha() -> dict:
-    """وضعیت Failover / HA برای مسیر بحرانی."""
+    """Failover / HA status for the critical path."""
     results: dict[str, str] = {}
     async with httpx.AsyncClient(timeout=2.0) as client:
         for name, base_url in _INTERNAL_SERVICES.items():
@@ -154,7 +154,7 @@ async def login(
             outcome="failure",
             ip=client_ip,
         )
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="کد کارمندی یا رمز عبور نادرست است.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect employee code or password.")
 
     if not user.get("two_factor_enabled") and not settings.two_factor_required:
         token = create_access_token(user["id"], user["employee_code"], user["role"])
@@ -188,12 +188,12 @@ async def verify_otp(
 ) -> dict:
     payload = decode_token(body.pending_token)
     if payload.get("token_type") != "pending_otp":
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="توکن موقت نامعتبر است.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The temporary token is invalid.")
 
     user = get_user_by_employee_code(payload["employee_code"])
     client_ip = request.client.host if request.client else None
     if not user or not user.get("otp_secret"):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="احراز هویت دو مرحله‌ای فعال نیست.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Two-factor authentication is not enabled.")
 
     if not verify_otp_code(user["otp_secret"], body.otp_code):
         audit(
@@ -203,7 +203,7 @@ async def verify_otp(
             outcome="failure",
             ip=client_ip,
         )
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="کد یک‌بارمصرف نادرست است.")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="The one-time code is incorrect.")
 
     token = create_access_token(user["id"], user["employee_code"], user["role"])
     audit(
@@ -380,7 +380,7 @@ async def auth_me(user: dict = Depends(get_current_user)) -> dict:
 
 @app.get("/patent/capabilities")
 async def patent_capabilities(user: dict = Depends(get_current_user)) -> dict:
-    """خلاصه قابلیت‌های نوآورانه ثبت اختراع پیاده‌سازی‌شده در زیرساخت."""
+    """Summary of the patentable innovative capabilities implemented in the infrastructure."""
     return {
         "product": "Digital Transformation and Value Chain Integration",
         "differentiators_vs_honeywell": [
@@ -546,7 +546,7 @@ async def iran_ports(user: dict = Depends(get_current_user)) -> dict:
 
 @app.get("/customer/orders/{order_number}/status")
 async def customer_tracking(order_number: str, locale: str = "fa") -> dict:
-    """پورتال مشتری — بدون نیاز به لاگین داخلی (self-service)."""
+    """Customer portal — without needing an internal login (self-service)."""
     return await _proxy("logistics", "GET", f"/customer/orders/{order_number}/status", params={"locale": locale})
 
 

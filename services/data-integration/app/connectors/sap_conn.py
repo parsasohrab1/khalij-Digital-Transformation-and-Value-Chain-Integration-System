@@ -1,4 +1,4 @@
-"""کانکتور SAP (OData/RFC سبک) — در توسعه محلی با simulated کار می‌کند."""
+"""SAP connector (light OData/RFC) — works with simulated data in local development."""
 from __future__ import annotations
 
 from typing import Any
@@ -16,5 +16,5 @@ class SAPConnector(BaseConnector):
         return connection_status(False, "SAP live endpoint not configured", "fallback")
 
     def extract(self, limit: int = 500) -> list[RawRecord]:
-        # در محیط واقعی: فراخوانی OData entity set یا BAPI
+        # In a real environment: call an OData entity set or BAPI
         return load_synthetic_oltp(limit)

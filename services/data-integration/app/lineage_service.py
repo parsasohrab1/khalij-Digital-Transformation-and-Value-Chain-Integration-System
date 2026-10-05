@@ -1,4 +1,4 @@
-"""ثبت نسب‌شناسی داده (Data Lineage) برای اثبات مالکیت دامنه Data Mesh."""
+"""Data Lineage recording to prove ownership of the Data Mesh domain."""
 from __future__ import annotations
 
 import json

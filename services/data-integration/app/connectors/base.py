@@ -1,4 +1,4 @@
-"""کانکتور پایه OLTP/ERP برای معماری Data Mesh."""
+"""Base OLTP/ERP connector for the Data Mesh architecture."""
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

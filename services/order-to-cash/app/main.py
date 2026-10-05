@@ -1,4 +1,4 @@
-"""Order-to-Cash Phase 3 — موجودی واقعی، تخصیص هوشمند، فاکتور/پرداخت، fulfillment لجستیک."""
+"""Order-to-Cash Phase 3 — actual inventory, intelligent allocation, invoice/payment, logistics fulfillment."""
 from __future__ import annotations
 
 import json
@@ -340,13 +340,13 @@ async def invoice_detail(invoice_number: str) -> dict:
 
 @app.get("/customer/orders/{order_number}/portal")
 async def customer_portal(order_number: str, locale: str = "fa") -> dict:
-    """پورتال مشتری: سفارش + فاکتور/پرداخت + لینک وضعیت محموله."""
+    """Customer portal: order + invoice/payment + shipment status link."""
     order = _load_order(order_number)
     if not order:
         raise HTTPException(status_code=404, detail="order not found")
     invoices = invoices_for_order(order_number)
     messages = {
-        "fa": f"سفارش {order_number} در وضعیت {order['status']}",
+        "fa": f"Order {order_number} is in status {order['status']}",
         "en": f"Order {order_number} is {order['status']}",
         "ar": f"الطلب {order_number} بحالة {order['status']}",
     }

@@ -1,4 +1,4 @@
-"""بارگذاری سری‌زمانی موجودی و قیمت در TimescaleDB."""
+"""Loading the inventory and price time series into TimescaleDB."""
 from __future__ import annotations
 
 import logging

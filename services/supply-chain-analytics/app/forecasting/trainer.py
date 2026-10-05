@@ -1,4 +1,4 @@
-"""آموزش و سرو پیش‌بینی تقاضا به‌تفکیک گرید روی CSV تاریخی."""
+"""Training and serving demand forecasts per grade on historical CSV."""
 from __future__ import annotations
 
 import logging
@@ -52,18 +52,18 @@ def train_and_forecast(
     oil_price: float = 75.0,
     csv_path: str | None = None,
 ) -> dict[str, Any]:
-    """پیش‌بینی افق horizon_days — داده ثانیه‌ای را به بکت روزانه تقریب می‌زند."""
+    """Forecast over a horizon_days horizon — approximates per-second data into daily buckets."""
     model_name = (model_name or settings.forecast_model).lower()
     series = load_grade_series(csv_path)
 
-    # تقریب: هر ~86400 ثانیه ≈ 1 روز؛ در داده ۱۰k ثانیه ~ ۲.۷ ساعت → بکت‌های ۶۰نمونه‌ای به‌عنوان «روز مصنوعی»
+    # Approximation: every ~86400 seconds ≈ 1 day; in the 10k-second data ~ 2.7 hours → 60-sample buckets are treated as "artificial days"
     bucket = 60
     demand_tons: dict[str, float] = {}
     details: dict[str, Any] = {}
     oil_factor = 1.0 + 0.004 * (oil_price - 75)
 
     for g, y in series.items():
-        # aggregate to pseudo-daily (میانگین بکت، نه مجموع — برای مقیاس واقع‌گرایانه)
+        # aggregate to pseudo-daily (bucket mean, not sum — for realistic scale)
         n = len(y) - (len(y) % bucket)
         if n < bucket * 3:
             daily = y
@@ -88,7 +88,7 @@ def train_and_forecast(
             result = forecast_prophet(daily, horizon=steps, period=max(7.0, len(daily) / 4))
 
         preds = np.array(result["predictions"], dtype=float)
-        # تعمیم افق: میانگین روزانه پیش‌بینی × تعداد روز
+        # Horizon extension: daily mean forecast × number of days
         daily_avg = float(np.mean(preds)) if len(preds) else float(result.get("train_mean", 0))
         demand_tons[g] = round(daily_avg * horizon_days * oil_factor, 2)
         details[g] = result

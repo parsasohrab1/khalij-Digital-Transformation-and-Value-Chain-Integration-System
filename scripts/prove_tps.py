@@ -1,4 +1,4 @@
-"""اثبات ظرفیت مسیر بحرانی تا هدف ۵۰٬۰۰۰ TPS (NFR-SCL-01)."""
+"""Proof of critical-path capacity up to the 50,000 TPS target (NFR-SCL-01)."""
 from __future__ import annotations
 
 import argparse

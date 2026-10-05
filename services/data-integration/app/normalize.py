@@ -1,11 +1,11 @@
-"""استانداردسازی کد HS و واحد اندازه‌گیری به تن (FR-DATA-03)."""
+"""Standardization of HS code and unit of measurement to tons (FR-DATA-03)."""
 from __future__ import annotations
 
 from shared.events import NormalizedProductRecord
 
 from .connectors.base import RawRecord
 
-# تبدیل به تن
+# Convert to tons
 UOM_TO_TON = {
     "ton": 1.0,
     "t": 1.0,

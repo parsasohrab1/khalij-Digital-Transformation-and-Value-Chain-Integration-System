@@ -1,4 +1,4 @@
-"""بهینه‌سازی معامله با سناریوهای what-if (FR-ML-03)."""
+"""Trading optimization with what-if scenarios (FR-ML-03)."""
 from __future__ import annotations
 
 from typing import Any
@@ -8,7 +8,7 @@ def _price_path(oil: float, days: int = 14) -> list[float]:
     base = 900 + 5 * (oil - 75)
     path = []
     for d in range(days):
-        # نوسان سینوسی ساده
+        # Simple sinusoidal fluctuation
         import math
 
         path.append(round(base + 15 * math.sin(d / 3) + 5 * math.cos(d / 5), 2))

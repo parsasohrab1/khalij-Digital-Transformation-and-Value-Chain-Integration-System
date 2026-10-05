@@ -1,4 +1,4 @@
-"""رمزنگاری AES-256-GCM برای داده حساس در حالت ذخیره‌سازی (NFR-SEC-01)."""
+"""AES-256-GCM encryption for sensitive data at rest (NFR-SEC-01)."""
 from __future__ import annotations
 
 import base64
@@ -27,7 +27,7 @@ def _key_bytes() -> bytes:
 
 
 def encrypt_sensitive(plaintext: str, aad: bytes | None = None) -> str:
-    """خروجی: base64(nonce || ciphertext+tag)."""
+    """Output: base64(nonce || ciphertext+tag)."""
     aes = AESGCM(_key_bytes())
     nonce = os.urandom(12)
     ct = aes.encrypt(nonce, plaintext.encode("utf-8"), aad)

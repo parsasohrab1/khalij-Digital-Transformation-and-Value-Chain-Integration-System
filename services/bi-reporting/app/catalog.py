@@ -1,11 +1,11 @@
-"""کاتالوگ فیلترهای داشبورد هلدینگ."""
+"""Catalog of holding dashboard filters."""
 from __future__ import annotations
 
 SUBSIDIARIES = [
-    {"code": "NPC", "region": "Tehran", "name_fa": "شرکت ملی صنایع پتروشیمی", "name_en": "NPC"},
-    {"code": "BIPC", "region": "Khuzestan", "name_fa": "پتروشیمی بندرامام", "name_en": "BIPC"},
-    {"code": "PIDMCO", "region": "Assaluyeh", "name_fa": "پتروشیمی پردیس", "name_en": "Pardis"},
-    {"code": "ARPC", "region": "Assaluyeh", "name_fa": "پتروشیمی آرین", "name_en": "Aryan"},
+    {"code": "NPC", "region": "Tehran", "name_fa": "National Petrochemical Company", "name_en": "NPC"},
+    {"code": "BIPC", "region": "Khuzestan", "name_fa": "Bandar Imam Petrochemical", "name_en": "BIPC"},
+    {"code": "PIDMCO", "region": "Assaluyeh", "name_fa": "Pardis Petrochemical", "name_en": "Pardis"},
+    {"code": "ARPC", "region": "Assaluyeh", "name_fa": "Aryan Petrochemical", "name_en": "Aryan"},
 ]
 
 PRODUCTS = ["HDPE", "LDPE", "LLDPE", "PP", "PET"]

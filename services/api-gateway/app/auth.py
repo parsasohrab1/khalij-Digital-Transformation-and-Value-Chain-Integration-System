@@ -1,4 +1,4 @@
-"""احراز هویت کاربران با رمز عبور + OTP اجباری (NFR-SEC-01) و RBAC (NFR-SEC-02)."""
+"""User authentication with password + mandatory OTP (NFR-SEC-01) and RBAC (NFR-SEC-02)."""
 from __future__ import annotations
 
 import logging
@@ -22,11 +22,11 @@ _oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
 _PENDING_OTP_TOKEN_TYPE = "pending_otp"
 _ACCESS_TOKEN_TYPE = "access"
 
-# کاربر دمو آفلاین (اگر DB در دسترس نباشد)
+# Offline demo user (if the DB is unavailable)
 _OFFLINE_DEMO = {
     "id": 1,
     "employee_code": "demo-admin",
-    "full_name": "مدیر دمو زنجیره ارزش",
+    "full_name": "Value Chain Demo Manager",
     "password_hash": "$2b$12$dTFM.AIRyaHlm8xioKQLnegLWMo1PT8AwDuuZHNO6SWHTD5QFUyyS",
     "otp_secret": "3MYXLVCKBIRJUTD6",
     "role": "admin",
@@ -49,7 +49,7 @@ def get_user_by_employee_code(employee_code: str) -> dict | None:
             row = cur.fetchone()
             return dict(row) if row else None
     except Exception:  # noqa: BLE001
-        logger.warning("خوانش کاربر از PostgreSQL ناموفق؛ استفاده از کاربر دمو آفلاین.")
+        logger.warning("Failed to read the user from PostgreSQL; using the offline demo user.")
         if employee_code == _OFFLINE_DEMO["employee_code"]:
             return dict(_OFFLINE_DEMO)
         return None
@@ -97,7 +97,7 @@ def decode_token(token: str) -> dict:
     try:
         return jwt.decode(token, settings.jwt_secret_key, algorithms=[settings.jwt_algorithm])
     except JWTError as exc:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="توکن نامعتبر یا منقضی شده است.") from exc
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="The token is invalid or expired.") from exc
 
 
 async def get_current_user(token: str = Depends(_oauth2_scheme)) -> dict:
@@ -105,7 +105,7 @@ async def get_current_user(token: str = Depends(_oauth2_scheme)) -> dict:
     if payload.get("token_type") != _ACCESS_TOKEN_TYPE:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="این توکن هنوز مرحله احراز هویت دو مرحله‌ای را کامل نکرده است.",
+            detail="This token has not yet completed the two-factor authentication step.",
         )
     return payload
 
@@ -115,6 +115,6 @@ def require_role(*roles: str):
         role = user.get("role", "")
         if role in roles or role_at_least(role, "admin"):
             return user
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="نقش کاربری مجاز نیست.")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="The user role is not authorized.")
 
     return _dependency

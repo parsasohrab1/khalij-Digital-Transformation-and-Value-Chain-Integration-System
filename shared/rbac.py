@@ -1,4 +1,4 @@
-"""کنترل دسترسی مبتنی بر نقش (RBAC) مطابق NFR-SEC-02."""
+"""Role-based access control (RBAC) per NFR-SEC-02."""
 from __future__ import annotations
 
 from fastapi import Depends, HTTPException, status
@@ -19,12 +19,12 @@ def role_at_least(user_role: str, required: str) -> bool:
 
 
 def require_roles(*allowed: str):
-    """Dependency factory — باید با get_current_user از api-gateway ترکیب شود."""
+    """Dependency factory — must be combined with get_current_user from the api-gateway."""
 
     async def _check(user: dict = Depends(lambda: {})) -> dict:
         # placeholder; services override by importing auth.get_current_user
         if user.get("role") not in allowed and not role_at_least(user.get("role", ""), "admin"):
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="دسترسی مجاز نیست.")
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access is not permitted.")
         return user
 
     return _check

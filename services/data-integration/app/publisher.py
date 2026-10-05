@@ -1,4 +1,4 @@
-"""انتشار رویداد استاندارد روی Kafka با topic به‌ازای هر شرکت تابعه."""
+"""Publishing a standard event on Kafka with a topic per subsidiary."""
 from __future__ import annotations
 
 import logging

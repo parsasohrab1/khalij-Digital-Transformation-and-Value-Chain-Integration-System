@@ -1,4 +1,4 @@
-"""مانیتورینگ drift تقاضای واقعی در برابر baseline آموزش."""
+"""Monitoring drift of actual demand against the training baseline."""
 from __future__ import annotations
 
 from datetime import datetime, timezone

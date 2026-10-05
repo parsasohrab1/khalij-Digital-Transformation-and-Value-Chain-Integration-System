@@ -1,6 +1,6 @@
-"""Supply Chain Analytics — فاز ۲: Prophet/LSTM + بهینه‌سازی حلقه‌بسته + Trading what-if + MLflow/Drift.
+"""Supply Chain Analytics — Phase 2: Prophet/LSTM + closed-loop optimization + Trading what-if + MLflow/Drift.
 
-نوآوری ثبت اختراع: پیش‌بینی و بهینه‌سازی یکپارچه با بیشینه‌سازی حاشیه کل هلدینگ.
+Patent innovation: integrated forecasting and optimization maximizing the holding's total margin.
 """
 from __future__ import annotations
 

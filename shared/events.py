@@ -1,7 +1,7 @@
-"""قرارداد رویدادهای Kafka برای Data Mesh (نسخه‌بندی‌شده).
+"""Kafka event contract for Data Mesh (versioned).
 
-هر شرکت تابعه topic اختصاصی دارد: dvc.subsidiary.{code}
-رویدادهای دامنه روی topic مشترک نیز publish می‌شوند.
+Each subsidiary has a dedicated topic: dvc.subsidiary.{code}
+Domain events are also published on the common topic.
 """
 from __future__ import annotations
 
@@ -23,7 +23,7 @@ EventType = Literal[
 
 
 class CloudEventEnvelope(BaseModel):
-    """قرارداد یکنواخت رویداد — سازگار با الگوی CloudEvents سبک."""
+    """Uniform event contract — compatible with a light CloudEvents pattern."""
 
     id: str = Field(default_factory=lambda: str(uuid4()))
     source: str  # e.g. oracle://bipc/sales.orders

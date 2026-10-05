@@ -1,4 +1,4 @@
-"""تخصیص هوشمند سفارش به انبار: موجودی واقعی + فاصله + هزینه حمل."""
+"""Intelligent order-to-warehouse allocation: actual inventory + distance + shipping cost."""
 from __future__ import annotations
 
 import math
@@ -29,11 +29,11 @@ def allocate(
         if wh["inventory"] < quantity_tons:
             continue
         dist = haversine_km(customer_lat, customer_lon, wh["lat"], wh["lon"])
-        # امتیاز: فاصله نرمال + هزینه + پاداش انبار بندری برای صادرات
+        # Score: normalized distance + cost + port warehouse bonus for exports
         score = (dist / 1000.0) + (wh["cost_per_ton"] / 50.0)
         if prefer_port and wh.get("port_code"):
             score -= 0.15
-        # موجودی بیشتر کمی بهتر است (پایداری)
+        # Higher inventory is slightly better (stability)
         score -= min(wh["inventory"] / 20000.0, 0.1)
         candidates.append(
             {

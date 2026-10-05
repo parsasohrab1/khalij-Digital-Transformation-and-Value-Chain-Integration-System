@@ -1,6 +1,6 @@
 """
-تولید داده یکپارچه برای سه حوزه:
-۱) بهینه‌سازی تولید  ۲) مدیریت انرژی و کربن  ۳) تحول دیجیتال / زنجیره ارزش
+Generate integrated data for three domains:
+1) Production optimization  2) Energy and carbon management  3) Digital transformation / value chain
 """
 from __future__ import annotations
 
@@ -113,7 +113,7 @@ def generate_dataset(num_records: int, start_time: datetime, seed: int | None = 
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="تولید داده یکپارچه پتروشیمی")
+    parser = argparse.ArgumentParser(description="Generate integrated petrochemical data")
     parser.add_argument("--num-records", type=int, default=10_000)
     parser.add_argument("--start-time", type=str, default="2026-07-22T08:00:00")
     parser.add_argument("--seed", type=int, default=42)
@@ -127,8 +127,8 @@ def main() -> None:
     start = datetime.fromisoformat(args.start_time)
     df = generate_dataset(args.num_records, start, args.seed)
     df.to_csv(args.output, index=False)
-    print(f"✅ داده‌های یکپارچه در '{args.output}' ذخیره شد.")
-    print(f"📊 تعداد رکوردها: {len(df):,} - تعداد متغیرها: {len(df.columns)}")
+    print(f"✅ Integrated data saved in '{args.output}'.")
+    print(f"📊 Number of records: {len(df):,} - Number of variables: {len(df.columns)}")
     print(df.head())
 
 

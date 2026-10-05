@@ -1,10 +1,10 @@
 -- ==========================================================================
--- Khalij DVC - TimescaleDB (سری زمانی موجودی، GPS، AIS، قیمت)
+-- Khalij DVC - TimescaleDB (time series of inventory, GPS, AIS, prices)
 -- ==========================================================================
 
 CREATE EXTENSION IF NOT EXISTS timescaledb;
 
--- موجودی لحظه‌ای انبارها
+-- Real-time warehouse inventory
 CREATE TABLE IF NOT EXISTS inventory_ts (
     time            TIMESTAMPTZ NOT NULL,
     warehouse_code  VARCHAR(32) NOT NULL,
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS inventory_ts (
 
 SELECT create_hypertable('inventory_ts', 'time', if_not_exists => TRUE);
 
--- موقعیت محموله‌ها (GPS / AIS)
+-- Shipment position (GPS / AIS)
 CREATE TABLE IF NOT EXISTS shipment_positions_ts (
     time            TIMESTAMPTZ NOT NULL,
     shipment_number VARCHAR(64) NOT NULL,
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS shipment_positions_ts (
 
 SELECT create_hypertable('shipment_positions_ts', 'time', if_not_exists => TRUE);
 
--- قیمت‌های بازار و خوراک
+-- Market and feed prices
 CREATE TABLE IF NOT EXISTS market_prices_ts (
     time            TIMESTAMPTZ NOT NULL,
     oil_price_usd_bbl DOUBLE PRECISION,

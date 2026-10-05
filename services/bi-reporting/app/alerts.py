@@ -1,4 +1,4 @@
-"""هشدارهای هوشمند — حافظه + Postgres alerts."""
+"""Smart alerts — memory + Postgres alerts."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -120,15 +120,15 @@ def raise_alert(
         "subsidiary_code": subsidiary_code,
         "region": region,
         "message_fa": (
-            f"انحراف {alert_type}: {metric_name}={metric_value} "
-            f"(آستانه {threshold_value}، Δ%{deviation_pct})"
+            f"Deviation {alert_type}: {metric_name}={metric_value} "
+            f"(threshold {threshold_value}, Δ%{deviation_pct})"
         ),
         "message_en": (
             f"{alert_type} deviation: {metric_name}={metric_value} "
             f"(threshold {threshold_value}, Δ%{deviation_pct})"
         ),
         "message_ar": (
-            f"انحراف {alert_type}: {metric_name}={metric_value} "
+            f"Deviation {alert_type}: {metric_name}={metric_value} "
             f"(الحد {threshold_value})"
         ),
         "acknowledged": False,

@@ -1,4 +1,4 @@
-"""محدودسازی نرخ درخواست برای مسیرهای بحرانی (آمادگی مقیاس/امنیت)."""
+"""Request rate limiting for critical paths (scale/security readiness)."""
 from __future__ import annotations
 
 import time

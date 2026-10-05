@@ -1,4 +1,4 @@
-"""مدل Prophet-like: روند خطی + فصلی فوریه روی تقاضای تاریخی."""
+"""Prophet-like model: linear trend + Fourier seasonality on historical demand."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -27,12 +27,12 @@ class ProphetLikeModel:
 
 
 def fit_prophet_like(y: np.ndarray, period: float = 24 * 3600, n_harmonics: int = 3) -> ProphetLikeModel:
-    """y: سری تقاضا (مثلاً orders_received یا order_quantity)."""
+    """y: demand series (e.g., orders_received or order_quantity)."""
     y = np.asarray(y, dtype=float)
     n = len(y)
     t = np.arange(n, dtype=float)
 
-    # ماتریس طراحی: [1, t, cos1, sin1, ...]
+    # Design matrix: [1, t, cos1, sin1, ...]
     cols = [np.ones(n), t]
     for k in range(n_harmonics):
         angle = 2 * np.pi * (k + 1) * t / period

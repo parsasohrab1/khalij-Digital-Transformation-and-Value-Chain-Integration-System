@@ -1,4 +1,4 @@
-"""Customer self-service portal (FR-LOG-03) — بدون لاگین داخلی."""
+"""Customer self-service portal (FR-LOG-03) — without an internal login."""
 from __future__ import annotations
 
 from pathlib import Path

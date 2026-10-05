@@ -1,4 +1,4 @@
-"""شبیه‌ساز/آداپتر AIS و GPS برای ردیابی لحظه‌ای محموله‌ها."""
+"""AIS and GPS simulator/adapter for real-time shipment tracking."""
 from __future__ import annotations
 
 import math
@@ -7,7 +7,7 @@ from typing import Any
 
 import numpy as np
 
-# trail در حافظه: shipment_number -> list[position]
+# In-memory trail: shipment_number -> list[position]
 _TRAILS: dict[str, list[dict[str, Any]]] = {}
 _VESSELS: dict[str, dict[str, Any]] = {}  # mmsi -> last AIS ping
 
@@ -81,11 +81,11 @@ def simulate_live_track(
     progress: float = 0.3,
     mmsi: str | None = None,
 ) -> dict[str, Any]:
-    """پیشروی روی مسیر مبدأ→مقصد (۰ تا ۱) و تولید پینگ AIS/GPS."""
+    """Advance along the origin→destination route (0 to 1) and generate an AIS/GPS ping."""
     progress = float(np.clip(progress, 0.0, 1.0))
     lat = start_lat + (dest_lat - start_lat) * progress
     lon = start_lon + (dest_lon - start_lon) * progress
-    # نویز کوچک مسیر
+    # Small route noise
     rng = np.random.default_rng(abs(hash(shipment_number)) % (2**32))
     lat += float(rng.normal(0, 0.02))
     lon += float(rng.normal(0, 0.02))

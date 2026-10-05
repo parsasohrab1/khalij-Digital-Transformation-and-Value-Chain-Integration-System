@@ -1,4 +1,4 @@
-"""گزارش هزینه تمام‌شده و حاشیه سود واحدها (با تعدیل از CSV)."""
+"""Cost per ton and unit profit margin report (adjusted from CSV)."""
 from __future__ import annotations
 
 from typing import Any

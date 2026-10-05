@@ -1,6 +1,6 @@
-"""Data Integration Hub — فاز ۱: کانکتور واقعی، استانداردسازی، Kafka، Timescale، Lineage.
+"""Data Integration Hub — Phase 1: real connector, standardization, Kafka, Timescale, Lineage.
 
-نوآوری ثبت اختراع: Data Mesh با مالکیت غیرمتمرکز داده به‌ازای هر شرکت تابعه.
+Patent innovation: Data Mesh with decentralized data ownership per subsidiary.
 """
 from __future__ import annotations
 
@@ -171,7 +171,7 @@ async def list_connectors() -> list[dict]:
 
 @app.post("/ingest", response_model=IngestBatchResult)
 async def ingest_batch(body: IngestRequest) -> IngestBatchResult:
-    """استخراج → نرمال‌سازی HS/UOM → Kafka (topic تابعه) → Timescale → Lineage."""
+    """Extract → normalize HS/UOM → Kafka (subsidiary topic) → Timescale → Lineage."""
     meta = _CONNECTORS.get(body.connector_key) if body.connector_key else None
     source_system = meta["source_system"] if meta else body.source_system
     subsidiary = meta["subsidiary_code"] if meta else body.subsidiary_code
@@ -194,7 +194,7 @@ async def ingest_batch(body: IngestRequest) -> IngestBatchResult:
             also_domain_topic=settings.kafka_topic_orders,
         )
 
-    # رویداد موجودی/قیمت برای سری زمانی
+    # Inventory/price event for the time series
     for r in raw[:50]:
         if r.warehouse_code:
             events_published += publisher.publish(

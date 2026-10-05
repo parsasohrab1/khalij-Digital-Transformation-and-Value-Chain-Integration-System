@@ -1,4 +1,4 @@
-"""استخراج از منابع با fallback به داده سنتتیک وقتی درایور/DB در دسترس نیست."""
+"""Extraction from sources with fallback to synthetic data when the driver/DB is unavailable."""
 from __future__ import annotations
 
 import csv
@@ -10,7 +10,7 @@ from .base import RawRecord
 
 
 def load_synthetic_oltp(limit: int = 500, data_path: str | None = None) -> list[RawRecord]:
-    """شبیه‌سازی استخراج از OLTP شرکت تابعه با CSV سنتتیک."""
+    """Simulate extraction from a subsidiary OLTP with synthetic CSV."""
     candidates = [
         Path(data_path) if data_path else None,
         Path("data/digital_value_chain_data_10k.csv"),
@@ -18,7 +18,7 @@ def load_synthetic_oltp(limit: int = 500, data_path: str | None = None) -> list[
     ]
     path = next((p for p in candidates if p and p.exists()), None)
     if path is None:
-        # حداقل یک دسته رکورد ساختگی
+        # At least one batch of fake records
         now = datetime.utcnow()
         return [
             RawRecord(
@@ -46,7 +46,7 @@ def load_synthetic_oltp(limit: int = 500, data_path: str | None = None) -> list[
             grade = row.get("product_type", "HDPE")
             hs_map = {"HDPE": "390120", "LDPE": "390110", "LLDPE": "390190", "PP": "390210", "PET": "390760"}
             qty = float(row.get("order_quantity_tons", 50))
-            # نیمی از رکوردها را به kg تبدیل می‌کنیم تا نرمال‌سازی UOM تست شود
+            # We convert half of the records to kg so that UOM normalization is tested
             if i % 3 == 0:
                 quantity, uom = qty * 1000, "kg"
             elif i % 3 == 1:

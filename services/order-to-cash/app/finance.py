@@ -1,4 +1,4 @@
-"""صدور فاکتور و پیگیری پرداخت — حافظه + Postgres."""
+"""Invoice issuance and payment follow-up — memory + Postgres."""
 from __future__ import annotations
 
 import uuid

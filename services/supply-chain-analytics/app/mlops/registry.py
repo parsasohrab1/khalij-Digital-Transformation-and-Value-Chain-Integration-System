@@ -1,4 +1,4 @@
-"""ثبت مدل در MLflow (با fallback محلی اگر سرور در دسترس نباشد)."""
+"""Model registration in MLflow (with local fallback if the server is unavailable)."""
 from __future__ import annotations
 
 import json

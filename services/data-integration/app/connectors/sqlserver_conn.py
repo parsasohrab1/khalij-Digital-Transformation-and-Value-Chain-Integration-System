@@ -1,4 +1,4 @@
-"""کانکتور SQL Server — pymssql/pyodbc اختیاری + fallback."""
+"""SQL Server connector — optional pymssql/pyodbc + fallback."""
 from __future__ import annotations
 
 from typing import Any

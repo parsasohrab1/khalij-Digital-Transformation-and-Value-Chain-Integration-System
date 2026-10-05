@@ -1,6 +1,6 @@
 -- ==========================================================================
--- Khalij DVC - Schema اولیه PostgreSQL
--- Data Mesh: مالکیت غیرمتمرکز داده به ازای هر شرکت تابعه (نوآوری ثبت اختراع)
+-- Khalij DVC - Initial PostgreSQL Schema
+-- Data Mesh: decentralized data ownership per subsidiary (patentable innovation)
 -- ==========================================================================
 
 SELECT 'CREATE DATABASE mlflow'
@@ -8,7 +8,7 @@ WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'mlflow')
 \gexec
 
 -- ---------------------------------------------------------------------
--- شرکت‌های تابعه هلدینگ (دامنه‌های Data Mesh)
+-- Holding subsidiaries (Data Mesh domains)
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS subsidiaries (
     id              SERIAL PRIMARY KEY,
@@ -16,15 +16,15 @@ CREATE TABLE IF NOT EXISTS subsidiaries (
     name_fa         VARCHAR(128) NOT NULL,
     name_en         VARCHAR(128) NOT NULL,
     name_ar         VARCHAR(128),
-    domain_owner    VARCHAR(128) NOT NULL,        -- مالک دامنه داده (Data Mesh)
-    kafka_topic     VARCHAR(128) NOT NULL,        -- topic اختصاصی شرکت تابعه
+    domain_owner    VARCHAR(128) NOT NULL,        -- data domain owner (Data Mesh)
+    kafka_topic     VARCHAR(128) NOT NULL,        -- dedicated subsidiary topic
     region          VARCHAR(64),
     is_active       BOOLEAN NOT NULL DEFAULT TRUE,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- ---------------------------------------------------------------------
--- کاربران و RBAC (NFR-SEC-02)
+-- Users and RBAC (NFR-SEC-02)
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS users (
     id              SERIAL PRIMARY KEY,
@@ -41,12 +41,12 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 -- ---------------------------------------------------------------------
--- کاتالوگ محصول و استانداردسازی شناسه (FR-DATA-03)
+-- Product catalog and identifier standardization (FR-DATA-03)
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS products (
     id              SERIAL PRIMARY KEY,
     internal_code   VARCHAR(64) UNIQUE NOT NULL,
-    hs_code         VARCHAR(16),                  -- کد HS بین‌المللی
+    hs_code         VARCHAR(16),                  -- international HS code
     grade           VARCHAR(32) NOT NULL,         -- HDPE | LDPE | LLDPE | PP | PET
     name_fa         VARCHAR(128) NOT NULL,
     name_en         VARCHAR(128) NOT NULL,
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS products (
 );
 
 -- ---------------------------------------------------------------------
--- انبارها
+-- Warehouses
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS warehouses (
     id              SERIAL PRIMARY KEY,
@@ -67,12 +67,12 @@ CREATE TABLE IF NOT EXISTS warehouses (
     longitude       DOUBLE PRECISION,
     capacity_tons   DOUBLE PRECISION NOT NULL,
     subsidiary_id   INTEGER REFERENCES subsidiaries(id),
-    port_code       VARCHAR(32),                  -- اتصال به بنادر ایران
+    port_code       VARCHAR(32),                  -- connection to Iranian ports
     is_active       BOOLEAN NOT NULL DEFAULT TRUE
 );
 
 -- ---------------------------------------------------------------------
--- واحدهای تولیدی (برای تخصیص خوراک - FR-ML-02)
+-- Production units (for feed allocation - FR-ML-02)
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS production_units (
     id              SERIAL PRIMARY KEY,
@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS production_units (
 );
 
 -- ---------------------------------------------------------------------
--- سفارشات (Order-to-Cash - FR-ORDER-01)
+-- Orders (Order-to-Cash - FR-ORDER-01)
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS orders (
     id              BIGSERIAL PRIMARY KEY,
@@ -109,7 +109,7 @@ CREATE INDEX IF NOT EXISTS idx_orders_status ON orders (status);
 CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders (created_at DESC);
 
 -- ---------------------------------------------------------------------
--- فاکتورها (FR-ORDER-03)
+-- Invoices (FR-ORDER-03)
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS invoices (
     id              BIGSERIAL PRIMARY KEY,
@@ -123,7 +123,7 @@ CREATE TABLE IF NOT EXISTS invoices (
 );
 
 -- ---------------------------------------------------------------------
--- محموله‌ها و ردیابی (FR-LOG-01 / بومی‌سازی ایران)
+-- Shipments and tracking (FR-LOG-01 / Iran localization)
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS shipments (
     id              BIGSERIAL PRIMARY KEY,
@@ -132,8 +132,8 @@ CREATE TABLE IF NOT EXISTS shipments (
     mode            VARCHAR(16) NOT NULL,         -- sea | road | rail
     origin_port     VARCHAR(64),                  -- BandarAbbas | Assaluyeh | Bushehr | ImamKhomeini
     destination     VARCHAR(256),
-    customs_declaration VARCHAR(64),              -- شماره اظهارنامه گمرکی ایران
-    ais_mmsi        VARCHAR(32),                  -- شناسه AIS کشتی
+    customs_declaration VARCHAR(64),              -- Iranian customs declaration number
+    ais_mmsi        VARCHAR(32),                  -- vessel AIS identifier
     gps_device_id   VARCHAR(64),
     eta_days        DOUBLE PRECISION,
     status          VARCHAR(32) NOT NULL DEFAULT 'planned',
@@ -143,7 +143,7 @@ CREATE TABLE IF NOT EXISTS shipments (
 CREATE INDEX IF NOT EXISTS idx_shipments_status ON shipments (status);
 
 -- ---------------------------------------------------------------------
--- هشدارهای هوشمند (FR-BI-03)
+-- Smart alerts (FR-BI-03)
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS alerts (
     id              BIGSERIAL PRIMARY KEY,
@@ -163,12 +163,12 @@ CREATE TABLE IF NOT EXISTS alerts (
 CREATE INDEX IF NOT EXISTS idx_alerts_raised_at ON alerts (raised_at DESC);
 
 -- ---------------------------------------------------------------------
--- نتایج بهینه‌سازی یکپارچه (قابلیت ثبت اختراع FR-ML-01/02)
+-- Integrated optimization results (patentable capability FR-ML-01/02)
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS optimization_runs (
     id              BIGSERIAL PRIMARY KEY,
     run_type        VARCHAR(64) NOT NULL,         -- demand_forecast | feedstock_lp | trading | integrated
-    objective_value DOUBLE PRECISION,             -- حاشیه سود کل هلدینگ
+    objective_value DOUBLE PRECISION,             -- holding's total profit margin
     horizon_days    INTEGER,
     model_run_id    VARCHAR(64),                  -- MLflow run id
     payload_json    JSONB NOT NULL DEFAULT '{}',
@@ -176,13 +176,13 @@ CREATE TABLE IF NOT EXISTS optimization_runs (
 );
 
 -- ---------------------------------------------------------------------
--- نسب‌شناسی داده / Data Lineage سبک (جایگزین اولیه Apache Atlas)
+-- Data lineage / lightweight Data Lineage (initial substitute for Apache Atlas)
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS data_lineage (
     id              BIGSERIAL PRIMARY KEY,
     source_system   VARCHAR(128) NOT NULL,        -- Oracle | SQLServer | PostgreSQL | SAP | ERP
     source_entity   VARCHAR(256) NOT NULL,
-    domain_code     VARCHAR(32) NOT NULL,         -- کد شرکت تابعه مالک
+    domain_code     VARCHAR(32) NOT NULL,         -- code of the owning subsidiary
     target_topic    VARCHAR(128),
     target_table    VARCHAR(128),
     transform_note  TEXT,
@@ -193,7 +193,7 @@ CREATE TABLE IF NOT EXISTS data_lineage (
 );
 
 -- ---------------------------------------------------------------------
--- رجیستری کانکتورهای OLTP / ERP (فاز ۱ — Data Mesh)
+-- OLTP / ERP connector registry (Phase 1 — Data Mesh)
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS data_connectors (
     id              SERIAL PRIMARY KEY,
@@ -220,29 +220,29 @@ CREATE TABLE IF NOT EXISTS model_registry_meta (
 );
 
 -- ---------------------------------------------------------------------
--- داده اولیه: شرکت‌های تابعه (دامنه‌های Data Mesh)
+-- Seed data: subsidiaries (Data Mesh domains)
 -- ---------------------------------------------------------------------
 INSERT INTO subsidiaries (code, name_fa, name_en, name_ar, domain_owner, kafka_topic, region) VALUES
-    ('NPC',   'شرکت ملی صنایع پتروشیمی', 'National Petrochemical Company', 'الشركة الوطنية للبتروكيماويات', 'npc-data-owner', 'dvc.subsidiary.npc', 'Tehran'),
-    ('BIPC',  'پتروشیمی بندرامام', 'Bandar Imam Petrochemical', 'بتروكيماويات بندر إمام', 'bipc-data-owner', 'dvc.subsidiary.bipc', 'Khuzestan'),
-    ('PIDMCO','پتروشیمی پردیس', 'Pardis Petrochemical', 'بتروكيماويات بارديس', 'pidmco-data-owner', 'dvc.subsidiary.pidmco', 'Assaluyeh'),
-    ('ARPC',  'پتروشیمی آرین', 'Aryan Petrochemical', 'بتروكيماويات آريان', 'arpc-data-owner', 'dvc.subsidiary.arpc', 'Assaluyeh')
+    ('NPC',   'National Petrochemical Company', 'National Petrochemical Company', 'الشركة الوطنية للبتروكيماويات', 'npc-data-owner', 'dvc.subsidiary.npc', 'Tehran'),
+    ('BIPC',  'Bandar Imam Petrochemical', 'Bandar Imam Petrochemical', 'بتروكيماويات بندر إمام', 'bipc-data-owner', 'dvc.subsidiary.bipc', 'Khuzestan'),
+    ('PIDMCO','Pardis Petrochemical', 'Pardis Petrochemical', 'بتروكيماويات بارديس', 'pidmco-data-owner', 'dvc.subsidiary.pidmco', 'Assaluyeh'),
+    ('ARPC',  'Aryan Petrochemical', 'Aryan Petrochemical', 'بتروكيماويات آريان', 'arpc-data-owner', 'dvc.subsidiary.arpc', 'Assaluyeh')
 ON CONFLICT (code) DO NOTHING;
 
 INSERT INTO products (internal_code, hs_code, grade, name_fa, name_en) VALUES
-    ('POLY-HDPE-01', '390120', 'HDPE',  'پلی‌اتیلن سنگین', 'High-Density Polyethylene'),
-    ('POLY-LDPE-01', '390110', 'LDPE',  'پلی‌اتیلن سبک', 'Low-Density Polyethylene'),
-    ('POLY-LLDPE-01','390190', 'LLDPE', 'پلی‌اتیلن سبک خطی', 'Linear Low-Density Polyethylene'),
-    ('POLY-PP-01',   '390210', 'PP',    'پلی‌پروپیلن', 'Polypropylene'),
-    ('POLY-PET-01',  '390760', 'PET',   'پلی‌اتیلن ترفتالات', 'Polyethylene Terephthalate')
+    ('POLY-HDPE-01', '390120', 'HDPE',  'High-density polyethylene', 'High-Density Polyethylene'),
+    ('POLY-LDPE-01', '390110', 'LDPE',  'Low-density polyethylene', 'Low-Density Polyethylene'),
+    ('POLY-LLDPE-01','390190', 'LLDPE', 'Linear low-density polyethylene', 'Linear Low-Density Polyethylene'),
+    ('POLY-PP-01',   '390210', 'PP',    'Polypropylene', 'Polypropylene'),
+    ('POLY-PET-01',  '390760', 'PET',   'Polyethylene terephthalate', 'Polyethylene Terephthalate')
 ON CONFLICT (internal_code) DO NOTHING;
 
 INSERT INTO warehouses (code, name_fa, name_en, city, latitude, longitude, capacity_tons, subsidiary_id, port_code)
 SELECT v.code, v.name_fa, v.name_en, v.city, v.lat, v.lon, v.cap, s.id, v.port
 FROM (VALUES
-    ('WH-BND', 'انبار بندرعباس', 'Bandar Abbas Warehouse', 'Bandar Abbas', 27.1832, 56.2666, 8000::float, 'BIPC', 'IRBND'),
-    ('WH-THR', 'انبار تهران', 'Tehran Warehouse', 'Tehran', 35.6892, 51.3890, 6000::float, 'NPC', NULL),
-    ('WH-ASL', 'انبار عسلویه', 'Assaluyeh Warehouse', 'Assaluyeh', 27.4761, 52.6070, 12000::float, 'PIDMCO', 'IRASL')
+    ('WH-BND', 'Bandar Abbas Warehouse', 'Bandar Abbas Warehouse', 'Bandar Abbas', 27.1832, 56.2666, 8000::float, 'BIPC', 'IRBND'),
+    ('WH-THR', 'Tehran Warehouse', 'Tehran Warehouse', 'Tehran', 35.6892, 51.3890, 6000::float, 'NPC', NULL),
+    ('WH-ASL', 'Assaluyeh Warehouse', 'Assaluyeh Warehouse', 'Assaluyeh', 27.4761, 52.6070, 12000::float, 'PIDMCO', 'IRASL')
 ) AS v(code, name_fa, name_en, city, lat, lon, cap, sub_code, port)
 JOIN subsidiaries s ON s.code = v.sub_code
 ON CONFLICT (code) DO NOTHING;
@@ -250,19 +250,19 @@ ON CONFLICT (code) DO NOTHING;
 INSERT INTO production_units (code, name_fa, subsidiary_id, feedstock_type, max_feed_tons_day, margin_per_ton_usd)
 SELECT v.code, v.name_fa, s.id, v.feed, v.max_feed, v.margin
 FROM (VALUES
-    ('PU-BIPC-1', 'واحد الفین بندرامام ۱', 'BIPC', 'ethylene', 1200::float, 220::float),
-    ('PU-PID-1',  'واحد اوره پردیس ۱', 'PIDMCO', 'methane', 2000::float, 180::float),
-    ('PU-ARPC-1', 'واحد پلیمر آرین ۱', 'ARPC', 'ethylene', 900::float, 250::float),
-    ('PU-NPC-1',  'واحد پلی‌پروپیلن مرکزی', 'NPC', 'propylene', 800::float, 210::float)
+    ('PU-BIPC-1', 'Bandar Imam Olefin Unit 1', 'BIPC', 'ethylene', 1200::float, 220::float),
+    ('PU-PID-1',  'Pardis Urea Unit 1', 'PIDMCO', 'methane', 2000::float, 180::float),
+    ('PU-ARPC-1', 'Aryan Polymer Unit 1', 'ARPC', 'ethylene', 900::float, 250::float),
+    ('PU-NPC-1',  'Central Polypropylene Unit', 'NPC', 'propylene', 800::float, 210::float)
 ) AS v(code, name_fa, sub_code, feed, max_feed, margin)
 JOIN subsidiaries s ON s.code = v.sub_code
 ON CONFLICT (code) DO NOTHING;
 
--- کاربر دمو: رمز ChangeMe123!  /  OTP secret برای تست
+-- Demo user: password ChangeMe123!  /  OTP secret for testing
 INSERT INTO users (employee_code, full_name, password_hash, otp_secret, role, locale)
 VALUES (
     'demo-admin',
-    'مدیر دمو زنجیره ارزش',
+    'Value Chain Demo Manager',
     '$2b$12$dTFM.AIRyaHlm8xioKQLnegLWMo1PT8AwDuuZHNO6SWHTD5QFUyyS',
     '3MYXLVCKBIRJUTD6',
     'admin',
@@ -271,7 +271,7 @@ VALUES (
 ON CONFLICT (employee_code) DO NOTHING;
 
 -- ---------------------------------------------------------------------
--- فاز ۵: Audit Log امنیتی/عملیاتی (NFR-SEC)
+-- Phase 5: Security/operational Audit Log
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS audit_logs (
     id              BIGSERIAL PRIMARY KEY,
@@ -288,7 +288,7 @@ CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs (created_at D
 CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs (action);
 
 -- ---------------------------------------------------------------------
--- Persist کامل state (Demo → Production readiness)
+-- Full state persistence (Demo → Production readiness)
 -- ---------------------------------------------------------------------
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS product_grade VARCHAR(32);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS allocated_warehouse_code VARCHAR(32);

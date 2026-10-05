@@ -1,4 +1,4 @@
-"""پیکربندی یکسان لاگ برای همه سرویس‌ها."""
+"""Uniform logging configuration for all services."""
 import logging
 import sys
 

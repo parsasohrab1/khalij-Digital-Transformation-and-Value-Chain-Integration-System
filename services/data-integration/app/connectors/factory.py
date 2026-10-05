@@ -1,4 +1,4 @@
-"""کارخانه ساخت کانکتور بر اساس نوع سیستم منبع."""
+"""Connector factory based on the source system type."""
 from __future__ import annotations
 
 from .base import BaseConnector

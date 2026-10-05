@@ -1,4 +1,4 @@
-"""اتصال سفارش به محموله لجستیک (Well-to-Market fulfillment)."""
+"""Connecting an order to a logistics shipment (Well-to-Market fulfillment)."""
 from __future__ import annotations
 
 from typing import Any
@@ -11,7 +11,7 @@ settings = get_settings()
 
 
 async def create_shipment_for_order(order: dict[str, Any], origin_port: str | None = None) -> dict[str, Any]:
-    """فراخوانی سرویس logistics برای ایجاد محموله و اظهارنامه گمرکی."""
+    """Call the logistics service to create a shipment and customs declaration."""
     port = origin_port
     if not port:
         # map warehouse -> port
@@ -37,7 +37,7 @@ async def create_shipment_for_order(order: dict[str, Any], origin_port: str | No
     except Exception:  # noqa: BLE001
         pass
 
-    # fallback محلی اگر logistics در دسترس نباشد
+    # Local fallback if logistics is unavailable
     return {
         "shipment_number": f"LOCAL-{order['order_number']}",
         "order_number": order["order_number"],

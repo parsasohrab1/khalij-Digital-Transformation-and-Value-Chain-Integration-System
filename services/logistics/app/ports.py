@@ -1,4 +1,4 @@
-"""بنادر ایران — کد PMO، اسکله، ترافیک لحظه‌ای (بومی‌سازی ثبت اختراع)."""
+"""Iranian ports — PMO code, berth, real-time traffic (patent localization)."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -12,7 +12,7 @@ IRAN_PORTS: dict[str, dict[str, Any]] = {
         "lon": 56.2666,
         "code": "IRBND",
         "pmo_code": "BND",
-        "name_fa": "بندر شهید رجایی / بندرعباس",
+        "name_fa": "Shahid Rajaee Port / Bandar Abbas",
         "name_en": "Bandar Abbas / Shahid Rajaee",
         "base_congestion_hours": 18,
         "berths": 12,
@@ -23,7 +23,7 @@ IRAN_PORTS: dict[str, dict[str, Any]] = {
         "lon": 52.6070,
         "code": "IRASL",
         "pmo_code": "ASL",
-        "name_fa": "بندر عسلویه",
+        "name_fa": "Assaluyeh Port",
         "name_en": "Assaluyeh Port",
         "base_congestion_hours": 12,
         "berths": 8,
@@ -34,7 +34,7 @@ IRAN_PORTS: dict[str, dict[str, Any]] = {
         "lon": 50.8203,
         "code": "IRBUZ",
         "pmo_code": "BUZ",
-        "name_fa": "بندر بوشهر",
+        "name_fa": "Bushehr Port",
         "name_en": "Bushehr Port",
         "base_congestion_hours": 10,
         "berths": 6,
@@ -45,7 +45,7 @@ IRAN_PORTS: dict[str, dict[str, Any]] = {
         "lon": 49.0667,
         "code": "IRIKH",
         "pmo_code": "IKH",
-        "name_fa": "بندر امام خمینی",
+        "name_fa": "Imam Khomeini Port",
         "name_en": "Imam Khomeini Port",
         "base_congestion_hours": 24,
         "berths": 15,
@@ -56,7 +56,7 @@ IRAN_PORTS: dict[str, dict[str, Any]] = {
         "lon": 60.6430,
         "code": "IRZBR",
         "pmo_code": "ZBR",
-        "name_fa": "بندر چابهار",
+        "name_fa": "Chabahar Port",
         "name_en": "Chabahar Port",
         "base_congestion_hours": 8,
         "berths": 5,

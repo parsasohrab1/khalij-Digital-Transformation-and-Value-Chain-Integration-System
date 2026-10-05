@@ -1,7 +1,7 @@
 # ==========================================================================
-# Khalij DVC - زیرساخت اصلی
-# PostgreSQL + TimescaleDB + Redis + Kafka + MLflow + میکروسرویس‌ها
-# معماری: Microservices + Data Mesh (نوآوری ثبت اختراع)
+# Khalij DVC - Main infrastructure
+# PostgreSQL + TimescaleDB + Redis + Kafka + MLflow + microservices
+# Architecture: Microservices + Data Mesh (patentable innovation)
 # ==========================================================================
 
 networks:

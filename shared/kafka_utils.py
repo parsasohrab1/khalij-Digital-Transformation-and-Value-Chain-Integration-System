@@ -1,4 +1,4 @@
-"""توابع کمکی Kafka برای استریم رویدادهای زنجیره ارزش (Data Mesh)."""
+"""Kafka helper functions for streaming value chain events (Data Mesh)."""
 from __future__ import annotations
 
 import json
@@ -38,13 +38,13 @@ class KafkaEventProducer:
             )
             self._producer.poll(0)
         except BufferError:
-            logger.warning("صف تولید Kafka پر است، در انتظار flush...")
+            logger.warning("Kafka producer queue is full, waiting for flush...")
             self._producer.flush(5)
 
     @staticmethod
     def _delivery_callback(err, msg):
         if err is not None:
-            logger.error("ارسال پیام به Kafka ناموفق بود: %s", err)
+            logger.error("Failed to send a message to Kafka: %s", err)
 
     def flush(self, timeout: float = 10.0) -> None:
         self._producer.flush(timeout)
@@ -74,7 +74,7 @@ class KafkaEventConsumer:
             try:
                 yield json.loads(msg.value().decode("utf-8"))
             except json.JSONDecodeError:
-                logger.warning("پیام نامعتبر JSON دریافت شد و نادیده گرفته شد.")
+                logger.warning("An invalid JSON message was received and ignored.")
 
     def run(self, handler: Callable[[dict], None]) -> None:
         for message in self.poll_messages():

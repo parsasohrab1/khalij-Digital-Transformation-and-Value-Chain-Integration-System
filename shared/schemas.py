@@ -1,4 +1,4 @@
-"""اسکیماهای مشترک Pydantic برای رویدادها و APIهای زنجیره ارزش."""
+"""Shared Pydantic schemas for events and value chain APIs."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -14,7 +14,7 @@ IranPort = Literal["BandarAbbas", "Assaluyeh", "Bushehr", "ImamKhomeini", "Chaba
 
 
 class DomainOwnership(BaseModel):
-    """مالکیت دامنه داده در معماری Data Mesh (نوآوری ثبت اختراع)."""
+    """Data domain ownership in the Data Mesh architecture (patentable innovation)."""
 
     subsidiary_code: str
     domain_owner: str
@@ -68,7 +68,7 @@ class FeedstockAllocation(BaseModel):
 
 
 class IntegratedOptimizationResult(BaseModel):
-    """نتیجه بهینه‌سازی یکپارچه تقاضا + قیمت + تخصیص خوراک (FR-ML-01)."""
+    """Result of integrated demand + price + feed allocation optimization (FR-ML-01)."""
 
     holding_margin_usd: float
     demand_forecast: dict[str, float]

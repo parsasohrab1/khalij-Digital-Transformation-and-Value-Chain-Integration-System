@@ -1,4 +1,4 @@
-"""میان‌افزار هدرهای امنیتی و الزامات انتقال امن."""
+"""Security headers middleware and secure transport requirements."""
 from __future__ import annotations
 
 from starlette.middleware.base import BaseHTTPMiddleware

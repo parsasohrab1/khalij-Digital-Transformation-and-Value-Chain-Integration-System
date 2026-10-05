@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>پورتال مشتری | هلدینگ خلیج فارس</title>
+  <title>Customer Portal | Persian Gulf Holding</title>
   <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;600;700&family=Sora:wght@500;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/assets/styles.css" />
 </head>
@@ -11,36 +11,36 @@
   <div class="bg" aria-hidden="true"></div>
   <main class="shell">
     <header>
-      <p class="brand">هلدینگ خلیج فارس</p>
-      <h1>پورتال پیگیری سفارش مشتری</h1>
-      <p class="sub">وضعیت سفارش، فاکتور و ردیابی محموله بدون ورود داخلی</p>
+      <p class="brand">Persian Gulf Holding</p>
+      <h1>Customer Order Tracking Portal</h1>
+      <p class="sub">Order status, invoice and shipment tracking without internal login</p>
     </header>
 
     <form id="trackForm" class="card">
       <label>
-        شماره سفارش
+        Order number
         <input id="orderNumber" placeholder="ORD-XXXXXXXXXX" required />
       </label>
       <label>
-        زبان
+        Language
         <select id="locale">
           <option value="fa" selected>فارسی</option>
           <option value="en">English</option>
           <option value="ar">العربية</option>
         </select>
       </label>
-      <button type="submit">پیگیری</button>
+      <button type="submit">Track</button>
     </form>
 
     <p id="error" class="error" hidden></p>
 
     <section id="result" class="grid hidden">
       <article class="card">
-        <h2>سفارش</h2>
+        <h2>Order</h2>
         <pre id="portalOut"></pre>
       </article>
       <article class="card">
-        <h2>حمل و گمرک</h2>
+        <h2>Shipping and customs</h2>
         <pre id="statusOut"></pre>
       </article>
     </section>

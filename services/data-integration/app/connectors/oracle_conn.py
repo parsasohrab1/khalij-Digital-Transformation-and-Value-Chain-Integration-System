@@ -1,4 +1,4 @@
-"""کانکتور Oracle — در صورت نصب oracledb اتصال زنده، وگرنه fallback سنتتیک."""
+"""Oracle connector — live connection if oracledb is installed, otherwise synthetic fallback."""
 from __future__ import annotations
 
 from typing import Any
@@ -16,7 +16,7 @@ class OracleConnector(BaseConnector):
         try:
             import oracledb  # type: ignore
 
-            # connection_uri مثال: user/pass@host:1521/service
+            # Example connection_uri: user/pass@host:1521/service
             conn = oracledb.connect(self.connection_uri)
             conn.close()
             return connection_status(True, "connected", "live")
@@ -27,7 +27,7 @@ class OracleConnector(BaseConnector):
         status = self.test_connection()
         if status["mode"] != "live":
             return load_synthetic_oltp(limit)
-        # مسیر زنده: SELECT از entity با bind limit
+        # Live path: SELECT from entity with bind limit
         try:
             import oracledb  # type: ignore
 

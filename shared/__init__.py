@@ -1,1 +1,1 @@
-"""بسته مشترک میکروسرویس‌های Khalij DVC."""
+"""Shared package of Khalij DVC microservices."""

@@ -1,4 +1,4 @@
-"""PoC دمو قابلیت‌های ثبت اختراع — مسیر یکپارچه Well-to-Market."""
+"""Patent capability demo PoC — integrated Well-to-Market path."""
 from __future__ import annotations
 
 import json
@@ -18,7 +18,7 @@ from shared.crypto import encrypt_sensitive, security_profile
 
 
 def load_app(service_dir: str):
-    """هر سرویس را با پاک‌سازی ماژول app قبلی لود می‌کند تا تداخل import نباشد."""
+    """Loads each service by clearing the previous app module to avoid import conflicts."""
     service_path = ROOT / "services" / service_dir
     # remove previous service package modules
     for key in list(sys.modules):

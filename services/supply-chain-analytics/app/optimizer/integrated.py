@@ -1,4 +1,4 @@
-"""بهینه‌سازی یکپارچه حلقه‌بسته: تقاضا → قیمت → LP خوراک → تصمیم معامله."""
+"""Integrated closed-loop optimization: demand → price → feed LP → trading decision."""
 from __future__ import annotations
 
 import time
@@ -28,7 +28,7 @@ def solve_feedstock_lp(
     units: list[dict],
     demand: dict[str, float] | None = None,
 ) -> tuple[list[FeedstockAllocation], float]:
-    """LP با قید تقاضای پیش‌بینی‌شده (حلقه بسته)."""
+    """LP with a forecast demand constraint (closed loop)."""
     problem = pulp.LpProblem("holding_margin_maximize", pulp.LpMaximize)
     vars_ = {
         u["code"]: pulp.LpVariable(f"feed_{u['code']}", lowBound=0, upBound=float(u["max_feed_tons_day"]))
@@ -37,14 +37,14 @@ def solve_feedstock_lp(
     problem += pulp.lpSum(vars_[u["code"]] * float(u["margin_per_ton_usd"]) for u in units)
     problem += pulp.lpSum(vars_[u["code"]] for u in units) <= available, "feedstock_cap"
 
-    # قید نرم تقاضا: مجموع تخصیص واحدهای هر محصول ≤ تقاضا * ضریب تبدیل تقریبی
+    # Soft demand constraint: sum of unit allocations of each product ≤ demand * approximate conversion factor
     if demand:
         by_product: dict[str, list] = {}
         for u in units:
             by_product.setdefault(u.get("product", "HDPE"), []).append(u["code"])
         for product, codes in by_product.items():
             cap = float(demand.get(product, 1e9)) / max(1.0, settings.demand_forecast_horizon_days) * 1.5
-            # تقاضا افقی است؛ ظرفیت روزانه را با میانگین روزانه تقاضا محدود می‌کنیم
+            # Demand is horizontal; we limit daily capacity with the daily mean of demand
             problem += pulp.lpSum(vars_[c] for c in codes) <= max(cap, 100.0), f"demand_{product}"
 
     problem.solve(pulp.PULP_CBC_CMD(msg=False, timeLimit=settings.lp_solver_time_limit_sec))
@@ -88,7 +88,7 @@ def run_integrated_optimization(
     demand = demand_result["demand_tons"]
     prices = forecast_prices(oil_price_usd_bbl, horizon_days)
 
-    # اعمال سناریوی what-if روی قیمت/خوراک
+    # Apply what-if scenario on price/feed
     if what_if:
         if "oil_shock_pct" in what_if:
             shock = 1.0 + float(what_if["oil_shock_pct"]) / 100.0

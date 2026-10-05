@@ -1,4 +1,4 @@
-"""BI & Reporting Phase 4 — داشبورد تعاملی، گزارش سودآوری، هشدار هوشمند."""
+"""BI & Reporting Phase 4 — interactive dashboard, profitability report, smart alerts."""
 from __future__ import annotations
 
 import logging

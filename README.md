@@ -66,88 +66,88 @@ python scripts/prove_tps.py --iterations 20000 --workers 32
 
 Reports: `docs/TPS_PROOF.md`, `reports/tps_proof.json`
 
-۱. مقدمه (Introduction)
-هدف: پیاده‌سازی یک پلتفرم یکپارچه مبتنی بر داده که زنجیره تأمین، تولید، توزیع و فروش محصولات پتروشیمی را به‌صورت لحظه‌ای به هم متصل کرده و با استفاده از هوش مصنوعی، تصمیم‌گیری‌های استراتژیک و عملیاتی را بهینه‌سازی کند. این سیستم، دیدگاه "از میدان تا بازار" (Well-to-Market) را محقق می‌سازد.
+1. Introduction
+Purpose: Implement an integrated data-driven platform that connects the supply chain, production, distribution and sales of petrochemical products in real time and, using artificial intelligence, optimizes strategic and operational decision-making. This system realizes the "Well-to-Market" perspective.
 
-چالش‌های موجود: ناهماهنگی بین واحدهای تولیدی و بازاریابی، عدم شفافیت در موجودی انبارها و هزینه‌های بالای لجستیک.
+Existing challenges: Lack of coordination between production and marketing units, lack of transparency in warehouse inventory, and high logistics costs.
 
-دامنه: شامل کلیه شرکت‌های تابعه هلدینگ خلیج‌فارس و ارتباط با تأمین‌کنندگان خارجی و مشتریان داخلی/خارجی.
+Scope: Includes all subsidiaries of the Persian Gulf Holding and the connection with foreign suppliers and domestic/foreign customers.
 
-۲. نیازمندی‌های کلی (General Requirements)
-شناسه	نیاز	اولویت
-R-GEN-01	یکپارچه‌سازی داده‌های تولید، انبارداری، حمل‌ونقل و فروش در یک "دریاچه داده" (Data Lake) متمرکز	بالا
-R-GEN-02	ارائه پنل مدیریتی یکپارچه (Command Center) برای پایش کل زنجیره ارزش	بالا
-R-GEN-03	ارتباط با سیستم‌های ERP و SAP موجود در شرکت‌های تابعه از طریق APIهای استاندارد	بالا
-R-GEN-04	پشتیبانی از چندزبانگی (فارسی، انگلیسی، عربی) برای کاربران بین‌المللی	متوسط
-۳. نیازمندی‌های عملکردی (Functional Requirements)
-۳-۱. ماژول یکپارچه‌سازی داده (Data Integration Hub)
-FR-DATA-01: سیستم باید قابلیت اتصال به تمام پایگاه‌های داده عملیاتی (OLTP) شرکت‌های تابعه را داشته باشد (Oracle، SQL Server، PostgreSQL).
+2. General Requirements
+ID	Requirement	Priority
+R-GEN-01	Integrate production, warehousing, transportation and sales data into a centralized "Data Lake"	High
+R-GEN-02	Provide an integrated management panel (Command Center) for monitoring the entire value chain	High
+R-GEN-03	Connect to the existing ERP and SAP systems of subsidiaries through standard APIs	High
+R-GEN-04	Multilingual support (Persian, English, Arabic) for international users	Medium
+3. Functional Requirements
+3-1. Data Integration Module (Data Integration Hub)
+FR-DATA-01: The system must be able to connect to all operational databases (OLTP) of subsidiaries (Oracle, SQL Server, PostgreSQL).
 
-FR-DATA-02: پیاده‌سازی الگوی Data Mesh برای غیرمتمرکزسازی مالکیت داده‌ها و تسهیل دسترسی هر واحد به داده‌های موردنیاز خود.
+FR-DATA-02: Implement the Data Mesh pattern to decentralize data ownership and ease each unit's access to the data it needs.
 
-FR-DATA-03: تطبیق و استانداردسازی واحدهای اندازه‌گیری و شناسه‌های کالا (مانند کد HS و کد محصولات داخلی) در کل هلدینگ.
+FR-DATA-03: Matching and standardizing units of measurement and product identifiers (such as HS code and internal product codes) across the holding.
 
-۳-۲. ماژول تحلیل و پیش‌بینی زنجیره تأمین (Supply Chain Analytics)
-FR-ML-01: پیش‌بینی تقاضای محصولات (به‌تفکیک گریدهای مختلف پلیمر) برای ۳ ماه آینده با استفاده از مدل‌های Prophet یا LSTM بر اساس داده‌های تاریخی فروش و شاخص‌های اقتصاد کلان (قیمت نفت، نرخ ارز).
+3-2. Supply Chain Analytics Module
+FR-ML-01: Forecast product demand (by different polymer grades) for the next 3 months using Prophet or LSTM models based on historical sales data and macroeconomic indicators (oil price, exchange rate).
 
-FR-ML-02: بهینه‌سازی تخصیص خوراک (مواد اولیه) بین واحدهای تولیدی مختلف به‌گونه‌ای که حاشیه سود کل هلدینگ بیشینه شود (با استفاده از الگوریتم‌های برنامه‌ریزی خطی).
+FR-ML-02: Optimize the allocation of feed (raw materials) among different production units so that the total profit margin of the holding is maximized (using linear programming algorithms).
 
-FR-ML-03: پیش‌بینی نوسانات قیمت مواد اولیه و محصولات نهایی برای بهینه‌سازی زمان خرید و فروش (Trading Optimization).
+FR-ML-03: Forecast price fluctuations of raw materials and final products to optimize buying and selling timing (Trading Optimization).
 
-۳-۳. ماژول ردیابی و شفافیت لجستیک (Logistics & Traceability)
-FR-LOG-01: ردیابی لحظه‌ای محموله‌ها (دریایی، زمینی و ریلی) با استفاده از GPS و سیستم‌های AIS.
+3-3. Logistics & Traceability Module
+FR-LOG-01: Real-time tracking of shipments (sea, land and rail) using GPS and AIS systems.
 
-FR-LOG-02: محاسبه خودکار زمان تخمینی رسیدن (ETA) محموله‌ها با در نظر گرفتن شرایط آب‌وهوایی و ترافیک بنادر.
+FR-LOG-02: Automatic calculation of the estimated time of arrival (ETA) of shipments considering weather conditions and port traffic.
 
-FR-LOG-03: ارائه داشبورد به مشتریان برای مشاهده وضعیت سفارش‌های خود و زمان تحویل.
+FR-LOG-03: Provide a dashboard to customers to view the status of their orders and delivery time.
 
-۳-۴. ماژول مدیریت یکپارچه سفارشات و فروش (Order-to-Cash)
-FR-ORDER-01: ثبت و مدیریت یکپارچه سفارشات از تمام کانال‌های فروش (آنلاین، قراردادی، مزایده).
+3-4. Integrated Order and Sales Management Module (Order-to-Cash)
+FR-ORDER-01: Integrated registration and management of orders from all sales channels (online, contractual, auction).
 
-FR-ORDER-02: تخصیص هوشمند سفارشات به انبارها یا واحدهای تولیدی بر اساس نزدیکی جغرافیایی، موجودی و هزینه حمل.
+FR-ORDER-02: Intelligent allocation of orders to warehouses or production units based on geographic proximity, inventory and shipping cost.
 
-FR-ORDER-03: اتصال به سیستم‌های مالی برای صدور خودکار فاکتور و پیگیری دریافت وجه.
+FR-ORDER-03: Connection to financial systems for automatic invoice issuance and payment follow-up.
 
-۳-۵. ماژول گزارش‌دهی و هوش تجاری (BI & Reporting)
-FR-BI-01: تولید خودکار گزارش‌های کلیدی نظیر "هزینه تمام‌شده هر تن محصول"، "حاشیه سود هر واحد تولیدی" و "عملکرد توزیع".
+3-5. Reporting and Business Intelligence Module (BI & Reporting)
+FR-BI-01: Automatic generation of key reports such as "cost per ton of product", "profit margin of each production unit" and "distribution performance".
 
-FR-BI-02: داشبوردهای تعاملی با قابلیت فیلتر بر اساس شرکت تابعه، محصول، منطقه جغرافیایی و بازه زمانی.
+FR-BI-02: Interactive dashboards with filtering by subsidiary, product, geographic region and time interval.
 
-FR-BI-03: ایجاد هشدارهای هوشمند برای انحراف از برنامه تولید، فروش یا بودجه تعیین‌شده.
+FR-BI-03: Creating smart alerts for deviations from the production, sales or budget plan.
 
-۴. نیازمندی‌های غیرعملکردی (Non-Functional Requirements)
-شناسه	نیاز	مقدار هدف
-NFR-PER-01	زمان پاسخ‌دهی پلتفرم برای نمایش داشبوردها	کمتر از ۲ ثانیه
-NFR-PER-02	زمان پردازش پیش‌بینی تقاضا (برای ۳ ماه)	کمتر از ۵ دقیقه
-NFR-AVAIL-01	در دسترس بودن سیستم	۹۹.۹۵٪ (کمتر از ۲۲ دقیقه توقف در ماه)
-NFR-SEC-01	رمزنگاری داده‌های حساس (قیمت‌ها و قراردادها) در حالت ذخیره‌سازی (AES-256) و انتقال (TLS 1.3)	اجباری
-NFR-SEC-02	پیاده‌سازی دقیق نقش‌های دسترسی (RBAC) با تفکیک سطوح مدیریتی و عملیاتی	اجباری
-NFR-SCL-01	قابلیت مقیاس‌پذیری افقی برای مدیریت داده‌های ۵۰,۰۰۰ تراکنش در ثانیه	مورد انتظار
-۵. معماری فنی (Technical Architecture)
-معماری کلی: میکروسرویس‌ها (Microservices) با رویکرد Data Mesh
+4. Non-Functional Requirements
+ID	Requirement	Target value
+NFR-PER-01	Platform response time for displaying dashboards	Less than 2 seconds
+NFR-PER-02	Demand forecast processing time (for 3 months)	Less than 5 minutes
+NFR-AVAIL-01	System availability	99.95% (less than 22 minutes downtime per month)
+NFR-SEC-01	Encryption of sensitive data (prices and contracts) at rest (AES-256) and in transit (TLS 1.3)	Mandatory
+NFR-SEC-02	Precise implementation of access roles (RBAC) separating management and operational levels	Mandatory
+NFR-SCL-01	Horizontal scalability to manage 50,000 transactions per second	Expected
+5. Technical Architecture
+Overall architecture: Microservices with a Data Mesh approach
 
-زبان برنامه‌نویسی: Python (برای سرویس‌های ML)، Java (برای سرویس‌های سنگین تراکنشی)
+Programming language: Python (for ML services), Java (for heavy transactional services)
 
-چارچوب وب: FastAPI و Spring Boot
+Web framework: FastAPI and Spring Boot
 
-پایگاه داده:
+Database:
 
-داده‌های تراکنشی: PostgreSQL (با شاردینگ)
+Transactional data: PostgreSQL (with sharding)
 
-داده‌های سری زمانی: TimescaleDB
+Time-series data: TimescaleDB
 
-داده‌های تحلیلی: Apache Druid
+Analytical data: Apache Druid
 
-ارسال پیام (Message Broker): Apache Kafka (با topicهای مجزا برای هر شرکت تابعه)
+Message Broker: Apache Kafka (with separate topics for each subsidiary)
 
-پردازش جریانی: Apache Flink برای پردازش داده‌های لحظه‌ای سنسورها و GPS
+Stream processing: Apache Flink for real-time processing of sensor and GPS data
 
-Data Catalog: Apache Atlas برای مدیریت متادیتا و نسب‌شناسی داده (Data Lineage)
+Data Catalog: Apache Atlas for metadata management and data lineage
 
 MLOps: MLflow + Kubeflow
 
-🧪 کد تولید داده‌های سنتتیک (Synthetic Data Generator)
-کد زیر داده‌های ۱۰,۰۰۰ رکورد (حدود ۲.۷ ساعت عملیات) را برای متغیرهای کلیدی زنجیره ارزش شبیه‌سازی می‌کند. این داده‌ها شامل اطلاعات سفارشات، موجودی، قیمت‌ها و وضعیت حمل‌ونقل هستند که با نرخ ۱ رکورد در ثانیه تولید می‌شوند.
+🧪 Synthetic Data Generator Code
+The code below simulates 10,000 records (about 2.7 hours of operation) of data for the key variables of the value chain. These data include order, inventory, price and transportation status information, generated at a rate of 1 record per second.
 
 python
 import numpy as np
@@ -156,39 +156,39 @@ from datetime import datetime, timedelta
 import random
 
 # ==============================================
-# پارامترهای تولید داده
+# Data generation parameters
 # ==============================================
-NUM_RECORDS = 10000          # 10,000 رکورد (ثانیه)
-START_TIME = datetime(2026, 7, 22, 8, 0, 0)   # زمان شروع
+NUM_RECORDS = 10000          # 10,000 records (seconds)
+START_TIME = datetime(2026, 7, 22, 8, 0, 0)   # start time
 
 # ==============================================
-# تولید برچسب زمانی با فاصله 1 ثانیه
+# Generate timestamps at 1-second intervals
 # ==============================================
 timestamps = [START_TIME + timedelta(seconds=i) for i in range(NUM_RECORDS)]
 
 # ==============================================
-# تولید داده‌های مصنوعی برای زنجیره ارزش
+# Generate synthetic data for the value chain
 # ==============================================
 
 # ------------------------
-# 1. داده‌های سفارشات (Orders)
+# 1. Orders data
 # ------------------------
-# شبیه‌سازی تعداد سفارشات دریافتی در هر ثانیه (توزیع پواسون)
-orders_received = np.random.poisson(lam=2, size=NUM_RECORDS)  # میانگین ۲ سفارش در ثانیه
+# Simulate the number of orders received per second (Poisson distribution)
+orders_received = np.random.poisson(lam=2, size=NUM_RECORDS)  # average of 2 orders per second
 
-# ارزش هر سفارش (دلار) - محدوده ۱۰,۰۰۰ تا ۲۵۰,۰۰۰ دلار
+# Value of each order (dollars) - range 10,000 to 250,000 dollars
 order_value = np.random.uniform(10000, 250000, size=NUM_RECORDS)
 
-# نوع محصول (گریدهای مختلف پلیمر)
+# Product type (different polymer grades)
 product_types = np.random.choice(['HDPE', 'LDPE', 'LLDPE', 'PP', 'PET'], size=NUM_RECORDS, p=[0.3, 0.2, 0.2, 0.2, 0.1])
 
-# میزان سفارش (تن) - محدوده ۲۰ تا ۵۰۰ تن
+# Order quantity (tons) - range 20 to 500 tons
 order_quantity_tons = np.random.uniform(20, 500, size=NUM_RECORDS)
 
 # ------------------------
-# 2. داده‌های موجودی انبار (Inventory)
+# 2. Warehouse inventory data
 # ------------------------
-# موجودی انبارهای مختلف (در تن)
+# Inventory of different warehouses (in tons)
 inventory_bandar_abbas = 5000 + 1000 * np.sin(np.linspace(0, 4*np.pi, NUM_RECORDS)) + np.random.normal(0, 100, NUM_RECORDS)
 inventory_bandar_abbas = np.clip(inventory_bandar_abbas, 2000, 8000)
 
@@ -198,150 +198,150 @@ inventory_tehran = np.clip(inventory_tehran, 1000, 6000)
 inventory_assaluyeh = 8000 + 1500 * np.sin(np.linspace(0, 4*np.pi, NUM_RECORDS) + 3.0) + np.random.normal(0, 150, NUM_RECORDS)
 inventory_assaluyeh = np.clip(inventory_assaluyeh, 4000, 12000)
 
-# موجودی کل
+# Total inventory
 total_inventory = inventory_bandar_abbas + inventory_tehran + inventory_assaluyeh
 
 # ------------------------
-# 3. داده‌های قیمت (Pricing)
+# 3. Pricing data
 # ------------------------
-# قیمت نفت خام (دلار بر بشکه) - شبیه‌سازی نوسانات روزانه
+# Crude oil price (dollars per barrel) - simulating daily fluctuations
 oil_price = 75 + 5 * np.sin(np.linspace(0, 3*np.pi, NUM_RECORDS)) + 2 * np.random.randn(NUM_RECORDS)
 oil_price = np.clip(oil_price, 60, 90)
 
-# قیمت محصولات (دلار بر تن) - وابسته به قیمت نفت و تقاضا
+# Product prices (dollars per ton) - dependent on oil price and demand
 price_hdpe = 900 + 0.5 * (oil_price - 75) * 10 + 20 * np.sin(np.linspace(0, 2*np.pi, NUM_RECORDS)) + 5 * np.random.randn(NUM_RECORDS)
 price_hdpe = np.clip(price_hdpe, 750, 1100)
 
 price_pp = 850 + 0.4 * (oil_price - 75) * 10 + 25 * np.sin(np.linspace(0, 2*np.pi, NUM_RECORDS) + 1.0) + 5 * np.random.randn(NUM_RECORDS)
 price_pp = np.clip(price_pp, 700, 1050)
 
-# قیمت خوراک (اتیلن) - محدوده ۷۰۰ تا ۱۰۰۰ دلار بر تن
+# Feed price (ethylene) - range 700 to 1000 dollars per ton
 feedstock_price = 800 + 0.3 * (oil_price - 75) * 10 + 15 * np.sin(np.linspace(0, 2*np.pi, NUM_RECORDS) + 2.0) + 5 * np.random.randn(NUM_RECORDS)
 feedstock_price = np.clip(feedstock_price, 700, 1000)
 
 # ------------------------
-# 4. داده‌های لجستیک و حمل‌ونقل (Logistics)
+# 4. Logistics and transportation data
 # ------------------------
-# تعداد کشتی‌های در حال بارگیری در بنادر
+# Number of ships loading at ports
 ships_in_port = np.random.choice([0, 1, 2, 3, 4], size=NUM_RECORDS, p=[0.1, 0.25, 0.35, 0.2, 0.1])
 
-# زمان تخمینی تحویل (ETA) به مشتری - محدوده ۲ تا ۱۵ روز
+# Estimated time of arrival (ETA) to the customer - range 2 to 15 days
 eta_days = 7 + 3 * np.sin(np.linspace(0, 2*np.pi, NUM_RECORDS)) + 2 * np.random.randn(NUM_RECORDS)
 eta_days = np.clip(np.round(eta_days, 1), 2, 15)
 
-# هزینه حمل هر تن (دلار) - تابعی از فاصله و قیمت سوخت
+# Shipping cost per ton (dollars) - a function of distance and fuel price
 logistics_cost_per_ton = 50 + 0.2 * (oil_price - 75) + 10 * np.random.randn(NUM_RECORDS)
 logistics_cost_per_ton = np.clip(logistics_cost_per_ton, 30, 80)
 
 # ------------------------
-# 5. شاخص‌های کلیدی عملکرد (KPIs)
+# 5. Key performance indicators (KPIs)
 # ------------------------
-# شاخص پر شدن انبار (Warehouse Fill Rate) - درصد
+# Warehouse Fill Rate - percent
 warehouse_fill_rate = 70 + 10 * np.sin(np.linspace(0, 2*np.pi, NUM_RECORDS)) + 5 * np.random.randn(NUM_RECORDS)
 warehouse_fill_rate = np.clip(warehouse_fill_rate, 40, 95)
 
-# شاخص نرخ تحویل به‌موقع (OTIF - On-Time In-Full) - درصد
+# On-Time In-Full (OTIF) rate - percent
 otif_rate = 88 + 5 * np.sin(np.linspace(0, 2*np.pi, NUM_RECORDS) + 0.5) + 3 * np.random.randn(NUM_RECORDS)
 otif_rate = np.clip(otif_rate, 70, 99)
 
-# حاشیه سود عملیاتی (درصد)
+# Operating profit margin (percent)
 operating_margin = 20 + 3 * np.sin(np.linspace(0, 2*np.pi, NUM_RECORDS) + 1.0) + 2 * np.random.randn(NUM_RECORDS)
 operating_margin = np.clip(operating_margin, 10, 35)
 
 # ==============================================
-# ساخت دیتافریم نهایی
+# Build the final dataframe
 # ==============================================
 df = pd.DataFrame({
     'timestamp': timestamps,
     
-    # داده‌های سفارشات
+    # Orders data
     'orders_received': orders_received,
     'order_value_usd': np.round(order_value, 2),
     'product_type': product_types,
     'order_quantity_tons': np.round(order_quantity_tons, 2),
     
-    # داده‌های موجودی
+    # Inventory data
     'inventory_bandar_abbas_tons': np.round(inventory_bandar_abbas, 2),
     'inventory_tehran_tons': np.round(inventory_tehran, 2),
     'inventory_assaluyeh_tons': np.round(inventory_assaluyeh, 2),
     'total_inventory_tons': np.round(total_inventory, 2),
     
-    # داده‌های قیمت
+    # Price data
     'oil_price_usd_bbl': np.round(oil_price, 2),
     'price_hdpe_usd_ton': np.round(price_hdpe, 2),
     'price_pp_usd_ton': np.round(price_pp, 2),
     'feedstock_price_usd_ton': np.round(feedstock_price, 2),
     
-    # داده‌های لجستیک
+    # Logistics data
     'ships_in_port': ships_in_port,
     'eta_days': eta_days,
     'logistics_cost_per_ton_usd': np.round(logistics_cost_per_ton, 2),
     
-    # شاخص‌های عملکرد
+    # Performance indicators
     'warehouse_fill_rate_percent': np.round(warehouse_fill_rate, 2),
     'otif_rate_percent': np.round(otif_rate, 2),
     'operating_margin_percent': np.round(operating_margin, 2)
 })
 
 # ==============================================
-# ذخیره در فایل CSV
+# Save to CSV file
 # ==============================================
 output_file = "digital_value_chain_data_10k.csv"
 df.to_csv(output_file, index=False)
-print(f"✅ داده‌های زنجیره ارزش با موفقیت در فایل '{output_file}' ذخیره شدند.")
-print(f"📊 تعداد رکوردها: {len(df):,} - تعداد متغیرها: {len(df.columns)}")
+print(f"✅ Value chain data saved successfully in file '{output_file}'.")
+print(f"📊 Number of records: {len(df):,} - Number of variables: {len(df.columns)}")
 
-print("\n🔍 نمونه داده‌های تولید شده:")
+print("\n🔍 Sample of generated data:")
 print(df.head())
 
-print("\n📈 آمار توصیفی داده‌ها:")
+print("\n📈 Descriptive statistics of the data:")
 print(df.describe(include='all'))
 
-# نمایش توزیع محصولات
-print("\n📊 توزیع انواع محصولات:")
+# Show the product distribution
+print("\n📊 Distribution of product types:")
 print(df['product_type'].value_counts())
-📊 خروجی نمونه (نمایش ۵ رکورد اول):
+📊 Sample output (first 5 records shown):
 timestamp	orders_received	order_value_usd	product_type	order_quantity_tons	inventory_bandar_abbas_tons	...	oil_price_usd_bbl	price_hdpe_usd_ton	ships_in_port	eta_days	otif_rate_percent	operating_margin_percent
 2026-07-22 08:00:00	2	152340.75	HDPE	245.30	5120.45	...	76.50	935.20	2	7.5	89.50	21.30
 2026-07-22 08:00:01	1	98750.20	PP	180.50	5080.12	...	76.80	938.50	1	6.8	90.10	22.10
 ...	...	...	...	...	...	...	...	...	...	...	...	...
-🔧 نکات فنی پیاده‌سازی کد:
-نرخ نمونه‌برداری: timedelta(seconds=i) تضمین می‌کند که داده‌ها با نرخ ۱ رکورد در ثانیه شبیه‌سازی شوند.
+🔧 Technical implementation notes:
+Sampling rate: timedelta(seconds=i) ensures the data are simulated at a rate of 1 record per second.
 
-تنوع داده‌ها: شامل ترکیبی از داده‌های عددی پیوسته (قیمت‌ها)، عددی گسسته (تعداد سفارشات، کشتی‌ها) و داده‌های کیفی (نوع محصول) است.
+Data diversity: Includes a combination of continuous numeric data (prices), discrete numeric data (number of orders, ships) and qualitative data (product type).
 
-روابط اقتصادی: قیمت محصولات و خوراک به‌صورت وابسته به قیمت نفت شبیه‌سازی شده‌اند که بازتاب دنیای واقعی است.
+Economic relationships: Product and feed prices are simulated as dependent on the oil price, which reflects the real world.
 
-شاخص‌های عملکرد: شاخص‌های کلیدی مانند OTIF و حاشیه سود به‌عنوان معیارهای ارزیابی عملکرد زنجیره ارزش در نظر گرفته شده‌اند.
+Performance indicators: Key indicators such as OTIF and profit margin are considered as evaluation criteria for value chain performance.
 
-کاربرد در دنیای واقعی: این داده‌ها می‌توانند برای پیاده‌سازی مدل‌های پیش‌بینی تقاضا، بهینه‌سازی تخصیص موجودی، و تحلیل حاشیه سود در پلتفرم تحول دیجیتال استفاده شوند.
+Real-world application: This data can be used to implement demand forecasting models, optimize inventory allocation, and analyze profit margins in the digital transformation platform.
 
-💡 پیشنهاد برای گام بعدی:
-پس از تولید این داده‌ها، می‌توانید:
+💡 Suggestion for the next step:
+After generating this data, you can:
 
-پیاده‌سازی یک مدل پیش‌بینی تقاضا با استفاده از Prophet یا LSTM روی داده‌های تاریخی سفارشات.
+Implement a demand forecasting model using Prophet or LSTM on historical order data.
 
-طراحی یک داشبورد هوش تجاری (BI) با PowerBI یا Tableau برای نمایش لحظه‌ای شاخص‌های کلیدی.
+Design a business intelligence (BI) dashboard with PowerBI or Tableau for real-time display of key indicators.
 
-پیاده‌سازی یک سیستم توصیه‌گر برای تخصیص بهینه سفارشات به انبارها بر اساس کمترین هزینه حمل و نزدیکترین موجودی
+Implement a recommender system for optimal allocation of orders to warehouses based on the lowest shipping cost and nearest inventory
 
 
 
-📄 مستند SRS – محصول ۳: تحول دیجیتال و یکپارچه‌سازی زنجیره ارزش (با قابلیت ثبت اختراع)
-۱. مقدمه
-هدف: پیاده‌سازی یک پلتفرم یکپارچه مبتنی بر معماری Data Mesh که زنجیره تأمین، تولید، توزیع و فروش محصولات پتروشیمی را به‌صورت لحظه‌ای به هم متصل کرده و با استفاده از هوش مصنوعی، تصمیم‌گیری‌های استراتژیک و عملیاتی را بهینه‌سازی کند .
+📄 SRS Document – Product 3: Digital Transformation and Value Chain Integration (Patentable)
+1. Introduction
+Purpose: Implement an integrated platform based on a Data Mesh architecture that connects the supply chain, production, distribution and sales of petrochemical products in real time and, using artificial intelligence, optimizes strategic and operational decision-making.
 
-نوآوری ثبت اختراع: برخلاف اختراع Honeywell که بر پلتفرم متمرکز وب‌بیس تأکید دارد، این سیستم از معماری Data Mesh با مالکیت غیرمتمرکز داده استفاده می‌کند و حلقه‌های تأمین، تولید، توزیع و فروش را در یک مدل بهینه‌سازی یکپارچه ترکیب می‌کند .
+Patent innovation: Unlike the Honeywell patent, which emphasizes a centralized web-based platform, this system uses a Data Mesh architecture with decentralized data ownership and combines the supply, production, distribution and sales loops in an integrated optimization model.
 
-۲. نیازمندی‌های عملکردی (با تأکید بر قابلیت‌های اختراع)
-شناسه	نیاز	قابلیت ثبت اختراع
-FR-DATA-01	یکپارچه‌سازی داده‌های تولید، انبارداری، حمل‌ونقل و فروش با معماری Data Mesh (مالکیت غیرمتمرکز داده)	معماری Data Mesh صنعتی (نوآوری اصلی)
-FR-ML-01	پیش‌بینی هم‌زمان تقاضا، قیمت و تخصیص بهینه خوراک با رویکرد بیشینه‌سازی حاشیه سود کل هلدینگ	پیش‌بینی و بهینه‌سازی یکپارچه
-FR-ML-02	بهینه‌سازی تخصیص خوراک بین واحدهای تولیدی با الگوریتم‌های برنامه‌ریزی خطی و LP	بهینه‌سازی تخصیص منابع
-FR-LOG-01	ردیابی لحظه‌ای محموله‌ها با GPS و AIS و اتصال به سامانه‌های گمرکی و بنادر ایران	بومی‌سازی لجستیک ایران
-FR-BI-01	تولید خودکار گزارش‌های "هزینه تمام‌شده هر تن محصول" و "حاشیه سود هر واحد تولیدی"	گزارش‌دهی یکپارچه سودآوری
-🧪 کد تولید داده‌های سنتتیک (یکپارچه برای هر سه حوزه)
-کد زیر داده‌های ۱۰,۰۰۰ رکورد (۱ رکورد در ثانیه) را برای هر سه حوزه به‌صورت یکپارچه تولید می‌کند تا بتوان از آن برای آموزش مدل‌های هر سه محصول استفاده کرد.
+2. Functional Requirements (with emphasis on patent capabilities)
+ID	Requirement	Patent capability
+FR-DATA-01	Integrate production, warehousing, transportation and sales data with a Data Mesh architecture (decentralized data ownership)	Industrial Data Mesh architecture (main innovation)
+FR-ML-01	Simultaneous forecasting of demand and price and optimal feed allocation with the approach of maximizing the total profit margin of the holding	Integrated forecasting and optimization
+FR-ML-02	Optimize feed allocation among production units with linear programming and LP algorithms	Resource allocation optimization
+FR-LOG-01	Real-time shipment tracking with GPS and AIS and connection to Iranian customs and port systems	Localization of Iranian logistics
+FR-BI-01	Automatic generation of "cost per ton of product" and "profit margin of each production unit" reports	Integrated profitability reporting
+🧪 Synthetic Data Generation Code (integrated for all three domains)
+The code below generates 10,000 records (1 record per second) for all three domains in an integrated way so it can be used to train the models of all three products.
 
 python
 import numpy as np
@@ -350,123 +350,123 @@ from datetime import datetime, timedelta
 import random
 
 # ==============================================
-# پارامترهای تولید داده
+# Data generation parameters
 # ==============================================
 NUM_RECORDS = 10000
 START_TIME = datetime(2026, 7, 22, 8, 0, 0)
 
 # ==============================================
-# تولید برچسب زمانی (1 رکورد در ثانیه)
+# Generate timestamp (1 record per second)
 # ==============================================
 timestamps = [START_TIME + timedelta(seconds=i) for i in range(NUM_RECORDS)]
-t = np.linspace(0, 10 * np.pi, NUM_RECORDS)  # برای الگوهای سیکلی
+t = np.linspace(0, 10 * np.pi, NUM_RECORDS)  # for cyclic patterns
 
 # ==============================================
-# 1. متغیرهای حوزه بهینه‌سازی تولید
+# 1. Production optimization domain variables
 # ==============================================
 
-# دمای راکتور - محدوده 150 تا 350 درجه سانتی‌گراد
+# Reactor temperature - range 150 to 350 degrees Celsius
 reactor_temp = 250 + 30 * np.sin(t * 0.5) + 0.01 * np.arange(NUM_RECORDS) + np.random.normal(0, 2, NUM_RECORDS)
 reactor_temp = np.clip(reactor_temp, 150, 350)
 
-# فشار راکتور - محدوده 10 تا 40 بار
+# Reactor pressure - range 10 to 40 bar
 reactor_pressure = 25 + 5 * np.sin(t * 0.3) + 0.005 * np.arange(NUM_RECORDS) + np.random.normal(0, 0.8, NUM_RECORDS)
 reactor_pressure = np.clip(reactor_pressure, 10, 40)
 
-# دبی خوراک ورودی - محدوده 100 تا 500 مترمکعب بر ساعت
+# Feed inlet flow - range 100 to 500 cubic meters per hour
 feed_flow = 300 + 80 * np.sin(t * 0.2 + 1.2) + np.random.normal(0, 5, NUM_RECORDS)
 feed_flow = np.clip(feed_flow, 100, 500)
 
-# کیفیت محصول (MFI - شاخص جریان مذاب) - محدوده 2 تا 10
+# Product quality (MFI - melt flow index) - range 2 to 10
 mfi_quality = 5 + 2 * np.sin(t * 0.3 + 0.5) + 0.002 * np.arange(NUM_RECORDS) + np.random.normal(0, 0.3, NUM_RECORDS)
 mfi_quality = np.clip(mfi_quality, 2, 10)
 
 # ==============================================
-# 2. متغیرهای حوزه مدیریت انرژی و کربن
+# 2. Energy and carbon management domain variables
 # ==============================================
 
-# مصرف برق (توان لحظه‌ای) - محدوده 5 تا 25 مگاوات
+# Electricity consumption (instantaneous power) - range 5 to 25 megawatts
 electricity_power = 15 + 5 * np.sin(t * 0.2) + 0.005 * np.arange(NUM_RECORDS) + np.random.normal(0, 0.5, NUM_RECORDS)
 electricity_power = np.clip(electricity_power, 5, 25)
 
-# مصرف سوخت گاز طبیعی - محدوده 50 تا 150 هزار مترمکعب بر ساعت
+# Natural gas fuel consumption - range 50 to 150 thousand cubic meters per hour
 fuel_gas_flow = 100 + 30 * np.sin(t * 0.15 + 1.5) + np.random.normal(0, 3, NUM_RECORDS)
 fuel_gas_flow = np.clip(fuel_gas_flow, 50, 150)
 
-# مصرف بخار - محدوده 10 تا 50 تن بر ساعت
+# Steam consumption - range 10 to 50 tons per hour
 steam_flow = 30 + 10 * np.sin(t * 0.25 + 0.8) + np.random.normal(0, 1.5, NUM_RECORDS)
 steam_flow = np.clip(steam_flow, 10, 50)
 
-# انتشار کربن Scope 1 - کیلوگرم CO2 به ازای هر تن محصول
+# Scope 1 carbon emission - kg CO2 per ton of product
 carbon_scope1 = 0.2 * fuel_gas_flow + 0.3 * steam_flow + np.random.normal(0, 2, NUM_RECORDS)
 carbon_scope1 = np.clip(carbon_scope1, 20, 80)
 
-# انتشار کربن Scope 2 (برق خریداری‌شده)
+# Scope 2 carbon emission (purchased electricity)
 carbon_scope2 = 0.15 * electricity_power + np.random.normal(0, 1, NUM_RECORDS)
 carbon_scope2 = np.clip(carbon_scope2, 5, 30)
 
-# انتشار کربن Scope 3 (زنجیره تأمین و توزیع) - شبیه‌سازی
+# Scope 3 carbon emission (supply chain and distribution) - simulated
 carbon_scope3 = 0.1 * feed_flow + 0.05 * np.random.randn(NUM_RECORDS) + 10
 carbon_scope3 = np.clip(carbon_scope3, 5, 25)
 
-# انتشار کربن کل
+# Total carbon emission
 carbon_total = carbon_scope1 + carbon_scope2 + carbon_scope3
 
 # ==============================================
-# 3. متغیرهای حوزه تحول دیجیتال و زنجیره ارزش
+# 3. Digital transformation and value chain domain variables
 # ==============================================
 
-# قیمت نفت خام - محدوده 60 تا 90 دلار بر بشکه
+# Crude oil price - range 60 to 90 dollars per barrel
 oil_price = 75 + 5 * np.sin(t * 0.15) + 2 * np.random.randn(NUM_RECORDS)
 oil_price = np.clip(oil_price, 60, 90)
 
-# قیمت محصول (HDPE) - وابسته به قیمت نفت
+# Product price (HDPE) - dependent on oil price
 price_hdpe = 900 + 0.5 * (oil_price - 75) * 10 + 20 * np.sin(t * 0.2) + 5 * np.random.randn(NUM_RECORDS)
 price_hdpe = np.clip(price_hdpe, 750, 1100)
 
-# تعداد سفارشات دریافتی (توزیع پواسون)
+# Number of orders received (Poisson distribution)
 orders_received = np.random.poisson(lam=2, size=NUM_RECORDS)
 
-# موجودی انبار - محدوده 2000 تا 8000 تن
+# Warehouse inventory - range 2000 to 8000 tons
 inventory = 5000 + 1000 * np.sin(t * 0.2) + np.random.normal(0, 100, NUM_RECORDS)
 inventory = np.clip(inventory, 2000, 8000)
 
-# زمان تحویل (ETA) - محدوده 2 تا 15 روز
+# Delivery time (ETA) - range 2 to 15 days
 eta_days = 7 + 3 * np.sin(t * 0.15) + 2 * np.random.randn(NUM_RECORDS)
 eta_days = np.clip(np.round(eta_days, 1), 2, 15)
 
 # ==============================================
-# 4. متغیرهای هدف (خروجی‌های اصلی)
+# 4. Target variables (main outputs)
 # ==============================================
 
-# راندمان تولید (Efficiency) - تابعی از دما و فشار
+# Production efficiency (Efficiency) - a function of temperature and pressure
 production_efficiency = ((reactor_temp - 200) / 150 * 20 + (reactor_pressure - 20) / 20 * 10 + 60 
                          + np.random.normal(0, 2, NUM_RECORDS))
 production_efficiency = np.clip(production_efficiency, 40, 98)
 
-# شدت انرژی (SEC) - محدوده 500 تا 800 کیلوگرم معادل نفت خام بر تن
+# Energy intensity (SEC) - range 500 to 800 kg crude oil equivalent per ton
 energy_intensity = (600 + 0.5 * fuel_gas_flow + 2 * steam_flow - 0.1 * feed_flow 
                     + 0.3 * reactor_temp + np.random.normal(0, 10, NUM_RECORDS))
 energy_intensity = np.clip(energy_intensity, 500, 800)
 
-# حاشیه سود عملیاتی - درصد
+# Operating profit margin - percent
 operating_margin = 20 + 3 * np.sin(t * 0.2 + 1.0) + 2 * np.random.randn(NUM_RECORDS)
 operating_margin = np.clip(operating_margin, 10, 35)
 
 # ==============================================
-# ساخت دیتافریم یکپارچه
+# Build the integrated dataframe
 # ==============================================
 df = pd.DataFrame({
     'timestamp': timestamps,
     
-    # حوزه ۱: بهینه‌سازی تولید
+    # Domain 1: Production optimization
     'reactor_temp_c': np.round(reactor_temp, 2),
     'reactor_pressure_bar': np.round(reactor_pressure, 2),
     'feed_flow_m3h': np.round(feed_flow, 2),
     'mfi_quality': np.round(mfi_quality, 2),
     'production_efficiency_percent': np.round(production_efficiency, 2),
     
-    # حوزه ۲: مدیریت انرژی و کربن
+    # Domain 2: Energy and carbon management
     'electricity_power_mw': np.round(electricity_power, 2),
     'fuel_gas_flow_km3h': np.round(fuel_gas_flow, 2),
     'steam_flow_tonh': np.round(steam_flow, 2),
@@ -476,7 +476,7 @@ df = pd.DataFrame({
     'carbon_total_kgco2_ton': np.round(carbon_total, 2),
     'energy_intensity_kgoe_ton': np.round(energy_intensity, 2),
     
-    # حوزه ۳: تحول دیجیتال و زنجیره ارزش
+    # Domain 3: Digital transformation and value chain
     'oil_price_usd_bbl': np.round(oil_price, 2),
     'price_hdpe_usd_ton': np.round(price_hdpe, 2),
     'orders_received': orders_received,
@@ -486,27 +486,27 @@ df = pd.DataFrame({
 })
 
 # ==============================================
-# ذخیره فایل
+# Save the file
 # ==============================================
 output_file = "integrated_petrochemical_data_10k.csv"
 df.to_csv(output_file, index=False)
-print(f"✅ داده‌های یکپارچه در فایل '{output_file}' ذخیره شد.")
-print(f"📊 تعداد رکوردها: {len(df):,} - تعداد متغیرها: {len(df.columns)}")
+print(f"✅ Integrated data saved in file '{output_file}'.")
+print(f"📊 Number of records: {len(df):,} - Number of variables: {len(df.columns)}")
 
-print("\n🔍 نمونه داده‌های تولید شده:")
+print("\n🔍 Sample of generated data:")
 print(df.head())
 
-print("\n📈 آمار توصیفی داده‌ها:")
+print("\n📈 Descriptive statistics of the data:")
 print(df.describe())
-🧩 جمع‌بندی: قابلیت‌های کلیدی ثبت اختراع
-حوزه	قابلیت‌های نوآورانه برای ثبت اختراع
-بهینه‌سازی تولید	1. حسگرهای مجازی هوشمند برای پیش‌بینی بلادرنگ خواص محصول 
-2. بهینه‌سازی سه‌هدفه (هزینه، کیفیت، انرژی) با PSO
-3. تولید داده‌های مصنوعی با GAN برای آموزش در شرایط کم‌داده
-مدیریت انرژی و کربن	1. محاسبه کامل Scope 1، 2 و 3 (برخلاف اختراعات موجود)
-2. شبیه‌سازی سناریوهای کربن‌محور (چه-اگر)
-3. بومی‌سازی برای قوانین و ضرایب انتشار ایران
-تحول دیجیتال	1. معماری Data Mesh صنعتی با مالکیت غیرمتمرکز داده
-2. پیش‌بینی و بهینه‌سازی یکپارچه کل زنجیره ارزش 
-3. اتصال به سامانه‌های گمرکی و بنادر ایران
+🧩 Summary: Key Patentable Capabilities
+Domain	Innovative capabilities for patenting
+Production optimization	1. Intelligent virtual sensors for real-time prediction of product properties
+2. Three-objective optimization (cost, quality, energy) with PSO
+3. Synthetic data generation with GAN for training under low-data conditions
+Energy and carbon management	1. Complete Scope 1, 2 and 3 calculation (unlike existing patents)
+2. Carbon-oriented what-if scenario simulation
+3. Localization for Iranian regulations and emission factors
+Digital transformation	1. Industrial Data Mesh architecture with decentralized data ownership
+2. Integrated forecasting and optimization of the entire value chain
+3. Connection to Iranian customs and port systems
 
